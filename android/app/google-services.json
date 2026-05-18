@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "390053117087",
+    "project_id": "swim-38b51",
+    "storage_bucket": "swim-38b51.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:390053117087:android:d65fe1b29eeaf1ff3776aa",
+        "android_client_info": {
+          "package_name": "com.khaled.swim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQapMLAn1yuXl_-ET5WYNnP9EBD7XahCE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

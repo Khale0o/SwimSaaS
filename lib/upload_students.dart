@@ -1,0 +1,121 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math';
+
+class UploadSwimmersPage extends StatefulWidget {
+const UploadSwimmersPage({super.key});
+
+@override
+State<UploadSwimmersPage> createState() => _UploadSwimmersPageState();
+}
+
+class _UploadSwimmersPageState extends State<UploadSwimmersPage> {
+bool isUploading = false;
+String message = "";
+
+final List<String> names = [
+"Ahmed Hassan", "Mohamed Ali", "Youssef Ibrahim", "Omar Khaled",
+"Karim Adel", "Hassan Mahmoud", "Mostafa Tarek", "Ali Fathy",
+"Amr Mohamed", "Ibrahim Samir", "Mahmoud Yasser", "Tamer Ehab",
+"Khaled Nabil", "Islam Hany", "Sherif Magdy", "Ehab Mostafa",
+"Fady Rami", "Adel Saad", "Othman Farid", "Walid Ashraf",
+"Ahmed Tamer", "Ramy Gamal", "Yasser Lotfy", "Ziad Emad",
+"Ayman Hossam", "Mina Nader", "Nour Ahmed", "Farah Hassan",
+"Sara Youssef", "Hana Mostafa", "Laila Khaled", "Malak Tarek",
+"Mariam Hany", "Rania Adel", "Nada Ibrahim", "Dina Sherif",
+"Hagar Fathy", "Esraa Mahmoud", "Reem Omar", "Salma Nabil",
+"Aya Karim", "Nourhan Ahmed", "Yasmin Ehab", "Mona Ali",
+"Basma Walid", "Rana Magdy", "Lobna Hassan", "Nadine Omar",
+"Menna Tamer", "Habiba Ziad"
+];
+
+final List<String> levels = ["Beginner", "Intermediate", "Advanced"];
+final List<List<String>> trainingOptions = [
+["Sunday", "Tuesday", "Thursday"],
+["Monday", "Wednesday", "Friday"],
+["Saturday", "Monday", "Wednesday"],
+["Sunday", "Wednesday", "Friday"],
+["Tuesday", "Thursday", "Saturday"],
+];
+
+final List<String> subsStatus = ["Active", "Expired"];
+final List<String> passedStatus = ["Yes", "No"];
+final Random random = Random();
+
+Future<void> uploadSwimmers() async {
+setState(() {
+isUploading = true;
+message = "Uploading swimmers to Firestore...";
+});
+
+
+final CollectionReference swimmersCollection =
+    FirebaseFirestore.instance.collection('Evaluations');
+
+for (String name in names) {
+  await swimmersCollection.add({
+    'name': name,
+    'level': levels[random.nextInt(levels.length)],
+    'score': 6 + random.nextInt(5),
+    'date': DateTime.now().toIso8601String(),
+    'notes': "Good performance and breathing control",
+    'trainingDays':
+        trainingOptions[random.nextInt(trainingOptions.length)].join(", "),
+    'subscriptionStatus': subsStatus[random.nextInt(subsStatus.length)],
+    'passed': passedStatus[random.nextInt(passedStatus.length)],
+  });
+}
+
+setState(() {
+  isUploading = false;
+  message = "✅ Successfully uploaded 50 swimmers to Firestore!";
+});
+
+
+}
+
+@override
+Widget build(BuildContext context) {
+return Scaffold(
+appBar: AppBar(
+title: const Text("Upload Swimmers"),
+backgroundColor: Colors.blueAccent,
+centerTitle: true,
+),
+body: Center(
+child: Padding(
+padding: const EdgeInsets.all(20.0),
+child: Column(
+mainAxisAlignment: MainAxisAlignment.center,
+children: [
+Text(
+message.isEmpty
+? "Press the button to upload swimmers data"
+: message,
+textAlign: TextAlign.center,
+style: const TextStyle(fontSize: 18),
+),
+const SizedBox(height: 40),
+ElevatedButton.icon(
+onPressed: isUploading ? null : uploadSwimmers,
+icon: const Icon(Icons.cloud_upload_rounded),
+label: Text(
+isUploading ? "Uploading..." : "Upload 50 Swimmers",
+style: const TextStyle(fontSize: 18),
+),
+style: ElevatedButton.styleFrom(
+backgroundColor: Colors.blueAccent,
+foregroundColor: Colors.white,
+padding: const EdgeInsets.symmetric(
+horizontal: 30, vertical: 14),
+shape: RoundedRectangleBorder(
+borderRadius: BorderRadius.circular(12)),
+),
+),
+],
+),
+),
+),
+);
+}
+}
