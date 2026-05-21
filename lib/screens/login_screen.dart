@@ -4,14 +4,17 @@ import 'package:flutter/services.dart';
 import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/features/auth/data/auth_repository.dart';
 import 'package:swim/features/auth/data/user_repository.dart';
+import 'package:swim/features/auth/presentation/auth_route_resolver.dart';
 import 'package:swim/screens/create_account_screen.dart';
 import 'package:swim/screens/forget_password_screen.dart';
-import 'package:swim/screens/home_screen.dart';
-import 'package:swim/screens/parent_dashboard_screen.dart';
-import 'package:swim/screens/swimmer_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    this.checkExistingSession = true,
+  });
+
+  final bool checkExistingSession;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -32,7 +35,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthentication();
+    if (widget.checkExistingSession) {
+      _checkAuthentication();
+    } else {
+      _checkingAuth = false;
+    }
   }
 
   void _checkAuthentication() {
@@ -104,20 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     _isNavigating = true;
 
-    Widget targetScreen;
-    switch (role) {
-      case AppRoles.coach:
-        targetScreen = const HomeScreen();
-        break;
-      case AppRoles.parent:
-        targetScreen = const ParentDashboardScreen();
-        break;
-      case AppRoles.swimmer:
-        targetScreen = const SwimmerDashboardScreen();
-        break;
-      default:
-        targetScreen = const ParentDashboardScreen();
-    }
+    final targetScreen = dashboardForRole(role);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {

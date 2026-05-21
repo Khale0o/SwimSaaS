@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/features/auth/presentation/auth_gate.dart';
 import 'package:swim/firebase_options.dart';
 import 'package:swim/screens/login_screen.dart';
 
@@ -94,9 +95,10 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         fontFamily: 'Inter',
       ),
-      home: const LoginScreen(),
+      home: const AuthGate(),
       routes: {
-        AppRoutes.login: (context) => const LoginScreen(),
+        AppRoutes.login: (context) =>
+            const LoginScreen(checkExistingSession: false),
       },
       debugShowCheckedModeBanner: false,
     );
