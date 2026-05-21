@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swim/core/constants/app_constants.dart';
 import 'dart:math';
 
 // Development-only Firestore seeding utility.
@@ -78,8 +79,8 @@ class _UploadSwimmersPageState extends State<UploadSwimmersPage> {
     ["Tuesday", "Thursday", "Saturday"],
   ];
 
-  final List<String> subsStatus = ["Active", "Expired"];
-  final List<String> passedStatus = ["Yes", "No"];
+  final List<String> subsStatus = [AppStatuses.active, AppStatuses.expired];
+  final List<String> passedStatus = [AppStatuses.yes, AppStatuses.no];
   final Random random = Random();
 
   Future<void> uploadSwimmers() async {
@@ -89,19 +90,20 @@ class _UploadSwimmersPageState extends State<UploadSwimmersPage> {
     });
 
     final CollectionReference swimmersCollection =
-        FirebaseFirestore.instance.collection('Evaluations');
+        FirebaseFirestore.instance.collection(AppCollections.evaluations);
 
     for (String name in names) {
       await swimmersCollection.add({
-        'name': name,
-        'level': levels[random.nextInt(levels.length)],
-        'score': 6 + random.nextInt(5),
-        'date': DateTime.now().toIso8601String(),
-        'notes': "Good performance and breathing control",
-        'trainingDays':
+        AppFields.name: name,
+        AppFields.level: levels[random.nextInt(levels.length)],
+        AppFields.score: 6 + random.nextInt(5),
+        AppFields.date: DateTime.now().toIso8601String(),
+        AppFields.notes: "Good performance and breathing control",
+        AppFields.trainingDays:
             trainingOptions[random.nextInt(trainingOptions.length)].join(", "),
-        'subscriptionStatus': subsStatus[random.nextInt(subsStatus.length)],
-        'passed': passedStatus[random.nextInt(passedStatus.length)],
+        AppFields.subscriptionStatus:
+            subsStatus[random.nextInt(subsStatus.length)],
+        AppFields.passed: passedStatus[random.nextInt(passedStatus.length)],
       });
     }
 

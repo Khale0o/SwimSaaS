@@ -3,6 +3,7 @@
 // trusted backend logic before release.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class AdminSetupScreen extends StatefulWidget {
   const AdminSetupScreen({super.key});
@@ -26,16 +27,16 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
     try {
       // البحث عن اليوزر بالإيميل
       final query = await _firestore
-          .collection('users')
-          .where('email', isEqualTo: _emailController.text.trim())
+          .collection(AppCollections.users)
+          .where(AppFields.email, isEqualTo: _emailController.text.trim())
           .get();
 
       if (query.docs.isNotEmpty) {
         await query.docs.first.reference.update({
-          'isAdmin': true,
-          'isApproved': true,
-          'isActive': true,
-          'needsApproval': false,
+          AppFields.isAdmin: true,
+          AppFields.isApproved: true,
+          AppFields.isActive: true,
+          AppFields.needsApproval: false,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(

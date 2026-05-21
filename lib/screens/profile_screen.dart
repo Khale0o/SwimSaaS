@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/screens/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -43,14 +44,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (_currentUser != null) {
       try {
-        final userDoc =
-            await _firestore.collection('users').doc(_currentUser!.uid).get();
+        final userDoc = await _firestore
+            .collection(AppCollections.users)
+            .doc(_currentUser!.uid)
+            .get();
         if (userDoc.exists) {
           if (mounted) {
             setState(() {
               _userData = userDoc.data()!;
-              _fullNameController.text = _userData['fullName'] ?? '';
-              _phoneController.text = _userData['phone'] ?? '';
+              _fullNameController.text = _userData[AppFields.fullName] ?? '';
+              _phoneController.text = _userData[AppFields.phone] ?? '';
             });
           }
         }
@@ -75,16 +78,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       try {
-        await _firestore.collection('users').doc(_currentUser!.uid).update({
-          'fullName': _fullNameController.text,
-          'phone': _phoneController.text,
-          'updatedAt': Timestamp.now(),
+        await _firestore
+            .collection(AppCollections.users)
+            .doc(_currentUser!.uid)
+            .update({
+          AppFields.fullName: _fullNameController.text,
+          AppFields.phone: _phoneController.text,
+          AppFields.updatedAt: Timestamp.now(),
         });
 
         if (mounted) {
           setState(() {
-            _userData['fullName'] = _fullNameController.text;
-            _userData['phone'] = _phoneController.text;
+            _userData[AppFields.fullName] = _fullNameController.text;
+            _userData[AppFields.phone] = _phoneController.text;
             _isEditing = false;
           });
         }
@@ -817,7 +823,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _userData['fullName'] ?? 'No Name',
+                  _userData[AppFields.fullName] ?? 'No Name',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

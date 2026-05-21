@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   const AdminPanelScreen({super.key});
@@ -16,15 +17,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   Future<void> _approveCoach(String coachId, BuildContext context) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(coachId)
-          .update({
-        'isApproved': true,
-        'isActive': true,
-        'needsApproval': false,
-        'approvedAt': Timestamp.now(),
-        'approvedBy': _auth.currentUser?.uid,
+      await _firestore.collection(AppCollections.users).doc(coachId).update({
+        AppFields.isApproved: true,
+        AppFields.isActive: true,
+        AppFields.needsApproval: false,
+        AppFields.approvedAt: Timestamp.now(),
+        AppFields.approvedBy: _auth.currentUser?.uid,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -116,10 +114,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
   Future<void> _deleteCoach(String coachId, BuildContext context) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(coachId)
-          .delete();
+      await _firestore.collection(AppCollections.users).doc(coachId).delete();
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -145,13 +140,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         children: [
           // Wave Background
           _buildWaveBackground(),
-          
+
           // Content
           Column(
             children: [
               // Modern Header
               _buildModernHeader(),
-              
+
               // Main Content
               Expanded(
                 child: Padding(
@@ -183,15 +178,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       Expanded(
                         child: StreamBuilder<QuerySnapshot>(
                           stream: _firestore
-                              .collection('users')
-                              .where('role', isEqualTo: 'coach')
-                              .where('isApproved', isEqualTo: false)
+                              .collection(AppCollections.users)
+                              .where(AppFields.role, isEqualTo: AppRoles.coach)
+                              .where(AppFields.isApproved, isEqualTo: false)
                               .snapshots(),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
                               return Center(
                                 child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF42A5F5)),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      const Color(0xFF42A5F5)),
                                 ),
                               );
                             }
@@ -226,8 +222,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               itemCount: pendingCoaches.length,
                               itemBuilder: (context, index) {
                                 final coach = pendingCoaches[index];
-                                final data = coach.data() as Map<String, dynamic>;
-                                
+                                final data =
+                                    coach.data() as Map<String, dynamic>;
+
                                 return _buildCoachCard(coach, data, context);
                               },
                             );
@@ -347,7 +344,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     );
   }
 
-  Widget _buildCoachCard(DocumentSnapshot coachDoc, Map<String, dynamic> data, BuildContext context) {
+  Widget _buildCoachCard(DocumentSnapshot coachDoc, Map<String, dynamic> data,
+      BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -389,7 +387,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.orange.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -435,7 +434,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // Reject Button
               Container(
                 width: 100,

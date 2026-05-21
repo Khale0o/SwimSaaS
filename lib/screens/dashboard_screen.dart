@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:swim/core/constants/app_constants.dart';
 import 'swimmers_list_screen.dart';
 import 'active_subs_screen.dart';
 import 'expired_subs_screen.dart';
@@ -14,7 +15,9 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('swimmers').snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection(AppCollections.swimmers)
+            .snapshots(),
         builder: (context, swimmersSnapshot) {
           if (!swimmersSnapshot.hasData) {
             return Center(
@@ -35,11 +38,11 @@ class DashboardScreen extends StatelessWidget {
           final totalSwimmers = swimmers.length;
           final activeSubs = swimmers.where((doc) {
             final data = doc.data() as Map<String, dynamic>;
-            return data['subscriptionStatus'] == 'Active';
+            return data[AppFields.subscriptionStatus] == AppStatuses.active;
           }).length;
           final expiredSubs = swimmers.where((doc) {
             final data = doc.data() as Map<String, dynamic>;
-            return data['subscriptionStatus'] == 'Expired';
+            return data[AppFields.subscriptionStatus] == AppStatuses.expired;
           }).length;
 
           return SingleChildScrollView(
@@ -49,9 +52,9 @@ class DashboardScreen extends StatelessWidget {
               children: [
                 // Welcome Section
                 _buildWaterWelcomeSection(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Quick Stats Grid
                 GridView.count(
                   shrinkWrap: true,
@@ -61,9 +64,9 @@ class DashboardScreen extends StatelessWidget {
                   mainAxisSpacing: 16,
                   children: [
                     _buildWaterStatCard(
-                      "Total Swimmers", 
+                      "Total Swimmers",
                       totalSwimmers.toString(),
-                      Icons.pool_rounded, 
+                      Icons.pool_rounded,
                       const [Color(0xFF42A5F5), Color(0xFF64B5F6)],
                       onTap: () {
                         Navigator.push(
@@ -75,9 +78,9 @@ class DashboardScreen extends StatelessWidget {
                       },
                     ),
                     _buildWaterStatCard(
-                      "Active Subs", 
+                      "Active Subs",
                       activeSubs.toString(),
-                      Icons.credit_card_rounded, 
+                      Icons.credit_card_rounded,
                       const [Color(0xFF4CAF50), Color(0xFF66BB6A)],
                       onTap: () {
                         Navigator.push(
@@ -89,9 +92,9 @@ class DashboardScreen extends StatelessWidget {
                       },
                     ),
                     _buildWaterStatCard(
-                      "Expired Subs", 
+                      "Expired Subs",
                       expiredSubs.toString(),
-                      Icons.warning_amber_rounded, 
+                      Icons.warning_amber_rounded,
                       const [Color(0xFFFF9800), Color(0xFFFFB74D)],
                       onTap: () {
                         Navigator.push(
@@ -103,25 +106,29 @@ class DashboardScreen extends StatelessWidget {
                       },
                     ),
                     StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance.collection('Evaluations').snapshots(),
+                      stream: FirebaseFirestore.instance
+                          .collection(AppCollections.evaluations)
+                          .snapshots(),
                       builder: (context, evalSnapshot) {
-                        final pendingEvals = evalSnapshot.hasData 
+                        final pendingEvals = evalSnapshot.hasData
                             ? evalSnapshot.data!.docs.where((doc) {
                                 final data = doc.data() as Map<String, dynamic>;
-                                return data['passed'] == 'No' || data['passed'] == null;
+                                return data['passed'] == 'No' ||
+                                    data['passed'] == null;
                               }).length
                             : 0;
-                            
+
                         return _buildWaterStatCard(
-                          "Pending Evals", 
+                          "Pending Evals",
                           pendingEvals.toString(),
-                          Icons.assignment_rounded, 
+                          Icons.assignment_rounded,
                           const [Color(0xFF9C27B0), Color(0xFFBA68C8)],
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const PendingEvalsScreen(),
+                                builder: (context) =>
+                                    const PendingEvalsScreen(),
                               ),
                             );
                           },
@@ -130,12 +137,13 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Today's Schedule Header
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -158,7 +166,7 @@ class DashboardScreen extends StatelessWidget {
                       Text(
                         "Today's Schedule",
                         style: TextStyle(
-                          fontSize: 18, 
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           fontFamily: 'SF Pro',
@@ -289,7 +297,9 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWaterStatCard(String title, String value, IconData icon, List<Color> gradientColors, {VoidCallback? onTap}) {
+  Widget _buildWaterStatCard(
+      String title, String value, IconData icon, List<Color> gradientColors,
+      {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -385,9 +395,10 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWaterTodaysGroupsSchedule(BuildContext context, List<QueryDocumentSnapshot> swimmers) {
+  Widget _buildWaterTodaysGroupsSchedule(
+      BuildContext context, List<QueryDocumentSnapshot> swimmers) {
     String today = _getToday();
-    
+
     List<String> groups = [
       'Group 1: 4:00 PM - 5:30 PM',
       'Group 2: 5:30 PM - 7:00 PM',
@@ -401,10 +412,11 @@ class DashboardScreen extends StatelessWidget {
         final groupSwimmers = swimmers.where((swimmer) {
           final data = swimmer.data() as Map<String, dynamic>;
           final trainingTime = data['trainingTime'] ?? '';
-          final trainingDays = data['trainingDays']?.toString().toLowerCase() ?? '';
-          
-          return trainingTime.contains(group.split(':')[0]) && 
-                 trainingDays.contains(today.toLowerCase());
+          final trainingDays =
+              data['trainingDays']?.toString().toLowerCase() ?? '';
+
+          return trainingTime.contains(group.split(':')[0]) &&
+              trainingDays.contains(today.toLowerCase());
         }).toList();
 
         return _buildWaterGroupScheduleItem(
@@ -417,7 +429,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWaterGroupScheduleItem(BuildContext context, String group, int swimmerCount, List<QueryDocumentSnapshot> swimmers) {
+  Widget _buildWaterGroupScheduleItem(BuildContext context, String group,
+      int swimmerCount, List<QueryDocumentSnapshot> swimmers) {
     Color groupColor = _getGroupColor(group);
     String groupName = group.split(':')[0];
     String time = group.split(':')[1].trim();
@@ -530,7 +543,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  void _showWaterGroupDetails(BuildContext context, String groupName, String time, List<QueryDocumentSnapshot> swimmers) {
+  void _showWaterGroupDetails(BuildContext context, String groupName,
+      String time, List<QueryDocumentSnapshot> swimmers) {
     final firestore = FirebaseFirestore.instance;
     final String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final String currentTime = DateFormat('hh:mm a').format(DateTime.now());
@@ -646,15 +660,19 @@ class DashboardScreen extends StatelessWidget {
 
                           final attendanceMap = data['attendance'] ?? {};
                           final totalSessions = 8;
-                          final attendedCount = attendanceMap.values.where((v) => v['present'] == true).length;
+                          final attendedCount = attendanceMap.values
+                              .where((v) => v['present'] == true)
+                              .length;
 
                           final attendanceData = data['attendance']?[todayDate];
-                          final bool isPresent = attendanceData?['present'] == true;
+                          final bool isPresent =
+                              attendanceData?['present'] == true;
 
                           return StatefulBuilder(
                             builder: (context, setStateDialog) {
                               return Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(12),
@@ -664,7 +682,9 @@ class DashboardScreen extends StatelessWidget {
                                 ),
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: _getGroupColor('$groupName: $time').withOpacity(0.3),
+                                    backgroundColor:
+                                        _getGroupColor('$groupName: $time')
+                                            .withOpacity(0.3),
                                     child: Text(
                                       name[0],
                                       style: const TextStyle(
@@ -692,24 +712,32 @@ class DashboardScreen extends StatelessWidget {
                                   trailing: GestureDetector(
                                     onTap: () async {
                                       try {
-                                        await firestore.collection('swimmers').doc(swimmer.id).update({
+                                        await firestore
+                                            .collection(AppCollections.swimmers)
+                                            .doc(swimmer.id)
+                                            .update({
                                           'attendance.$todayDate': {
                                             'time': currentTime,
                                             'present': !isPresent,
                                           }
                                         });
                                         setStateDialog(() {});
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
-                                            backgroundColor: !isPresent ? Colors.green : Colors.orange,
+                                            backgroundColor: !isPresent
+                                                ? Colors.green
+                                                : Colors.orange,
                                             content: Text(!isPresent
                                                 ? '✅ $name marked present'
                                                 : '❌ $name marked absent'),
-                                            duration: const Duration(seconds: 2),
+                                            duration:
+                                                const Duration(seconds: 2),
                                           ),
                                         );
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
                                             backgroundColor: Colors.red,
                                             content: Text('Error: $e'),
@@ -718,20 +746,27 @@ class DashboardScreen extends StatelessWidget {
                                       }
                                     },
                                     child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
+                                      duration:
+                                          const Duration(milliseconds: 300),
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: isPresent 
+                                        color: isPresent
                                             ? Colors.green.withOpacity(0.2)
                                             : Colors.grey.withOpacity(0.2),
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: isPresent ? Colors.green : Colors.grey,
+                                          color: isPresent
+                                              ? Colors.green
+                                              : Colors.grey,
                                         ),
                                       ),
                                       child: Icon(
-                                        isPresent ? Icons.check_rounded : Icons.close_rounded,
-                                        color: isPresent ? Colors.green : Colors.grey,
+                                        isPresent
+                                            ? Icons.check_rounded
+                                            : Icons.close_rounded,
+                                        color: isPresent
+                                            ? Colors.green
+                                            : Colors.grey,
                                         size: 16,
                                       ),
                                     ),
@@ -777,14 +812,22 @@ class DashboardScreen extends StatelessWidget {
   String _getToday() {
     final now = DateTime.now();
     switch (now.weekday) {
-      case 1: return 'Monday';
-      case 2: return 'Tuesday';
-      case 3: return 'Wednesday';
-      case 4: return 'Thursday';
-      case 5: return 'Friday';
-      case 6: return 'Saturday';
-      case 7: return 'Sunday';
-      default: return 'Unknown';
+      case 1:
+        return 'Monday';
+      case 2:
+        return 'Tuesday';
+      case 3:
+        return 'Wednesday';
+      case 4:
+        return 'Thursday';
+      case 5:
+        return 'Friday';
+      case 6:
+        return 'Saturday';
+      case 7:
+        return 'Sunday';
+      default:
+        return 'Unknown';
     }
   }
 

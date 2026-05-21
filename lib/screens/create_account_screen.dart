@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:swim/core/constants/app_constants.dart';
 import 'login_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  String _selectedRole = 'parent'; // 'coach', 'parent'
+  String _selectedRole = AppRoles.parent; // coach, parent
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
@@ -26,14 +27,14 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   final List<Map<String, dynamic>> _roles = [
     {
-      'value': 'parent',
+      'value': AppRoles.parent,
       'title': 'Parent/Guardian',
       'subtitle': 'Manage your child\'s swimming progress',
       'icon': Icons.family_restroom,
       'requiresApproval': false,
     },
     {
-      'value': 'coach',
+      'value': AppRoles.coach,
       'title': 'Coach',
       'subtitle':
           'Manage swimmers and training programs - Requires admin approval',
@@ -65,30 +66,30 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
 
         // 2️⃣ تحديد إذا الحساب هيحتاج موافقة ولا لا
-        bool requiresApproval = _selectedRole == 'coach';
-        bool isApproved = _selectedRole != 'coach';
-        bool isActive = _selectedRole != 'coach';
+        bool requiresApproval = _selectedRole == AppRoles.coach;
+        bool isApproved = _selectedRole != AppRoles.coach;
+        bool isActive = _selectedRole != AppRoles.coach;
 
         // 3️⃣ حفظ بيانات المستخدم في Firestore
         await FirebaseFirestore.instance
-            .collection('users')
+            .collection(AppCollections.users)
             .doc(credential.user!.uid)
             .set({
-          'fullName': _fullNameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'phone': _phoneController.text.trim(),
-          'uid': credential.user!.uid,
-          'role': _selectedRole,
-          'isActive': isActive,
-          'isApproved': isApproved,
-          'needsApproval': requiresApproval,
-          'createdAt': Timestamp.now(),
-          'profileCompleted': false,
+          AppFields.fullName: _fullNameController.text.trim(),
+          AppFields.email: _emailController.text.trim(),
+          AppFields.phone: _phoneController.text.trim(),
+          AppFields.uid: credential.user!.uid,
+          AppFields.role: _selectedRole,
+          AppFields.isActive: isActive,
+          AppFields.isApproved: isApproved,
+          AppFields.needsApproval: requiresApproval,
+          AppFields.createdAt: Timestamp.now(),
+          AppFields.profileCompleted: false,
         });
 
         // 4️⃣ رسالة نجاح مختلفة حسب نوع الحساب
         if (mounted) {
-          if (_selectedRole == 'coach') {
+          if (_selectedRole == AppRoles.coach) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content:

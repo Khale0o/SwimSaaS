@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/screens/create_account_screen.dart';
 import 'package:swim/screens/forget_password_screen.dart';
 import 'package:swim/screens/home_screen.dart';
@@ -54,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection(AppCollections.users)
           .doc(user.uid)
           .get()
           .timeout(const Duration(seconds: 10));
@@ -62,11 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted || _isNavigating) return;
 
       if (userDoc.exists) {
-        String role = userDoc['role'] ?? 'parent';
-        bool isApproved = userDoc['isApproved'] ?? true;
-        bool isActive = userDoc['isActive'] ?? true;
+        String role = userDoc[AppFields.role] ?? AppRoles.parent;
+        bool isApproved = userDoc[AppFields.isApproved] ?? true;
+        bool isActive = userDoc[AppFields.isActive] ?? true;
 
-        if (role == 'coach' && !isApproved) {
+        if (role == AppRoles.coach && !isApproved) {
           _showPendingApprovalDialog();
           setState(() {
             _checkingAuth = false;
@@ -84,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         _navigateToDashboard(role);
       } else {
-        _navigateToDashboard('parent');
+        _navigateToDashboard(AppRoles.parent);
       }
     } catch (e) {
       print('Error checking user: $e');
@@ -103,13 +104,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     Widget targetScreen;
     switch (role) {
-      case 'coach':
+      case AppRoles.coach:
         targetScreen = const HomeScreen();
         break;
-      case 'parent':
+      case AppRoles.parent:
         targetScreen = const ParentDashboardScreen();
         break;
-      case 'swimmer':
+      case AppRoles.swimmer:
         targetScreen = const SwimmerDashboardScreen();
         break;
       default:
@@ -145,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
         User? user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           DocumentSnapshot userDoc = await FirebaseFirestore.instance
-              .collection('users')
+              .collection(AppCollections.users)
               .doc(user.uid)
               .get()
               .timeout(const Duration(seconds: 10));
@@ -153,11 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
           if (!mounted) return;
 
           if (userDoc.exists) {
-            String role = userDoc['role'] ?? 'parent';
-            bool isApproved = userDoc['isApproved'] ?? true;
-            bool isActive = userDoc['isActive'] ?? true;
+            String role = userDoc[AppFields.role] ?? AppRoles.parent;
+            bool isApproved = userDoc[AppFields.isApproved] ?? true;
+            bool isActive = userDoc[AppFields.isActive] ?? true;
 
-            if (role == 'coach' && !isApproved) {
+            if (role == AppRoles.coach && !isApproved) {
               setState(() {
                 _isLoading = false;
               });
@@ -175,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             _navigateToDashboard(role);
           } else {
-            _navigateToDashboard('parent');
+            _navigateToDashboard(AppRoles.parent);
           }
         }
       } on FirebaseAuthException catch (e) {

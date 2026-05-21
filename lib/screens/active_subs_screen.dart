@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class ActiveSubsScreen extends StatefulWidget {
   const ActiveSubsScreen({super.key});
@@ -20,18 +21,18 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
         children: [
           // نفس Wave Background
           _buildWaveBackground(),
-          
+
           // المحتوى الرئيسي
           Column(
             children: [
               // App Bar مع زر الرجوع
               _buildAppBar(),
-              
+
               // Header Section
               _buildWaterWelcomeSection(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Search Bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -50,8 +51,10 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search active swimmers...',
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                      prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withOpacity(0.7)),
+                      prefixIcon: Icon(Icons.search,
+                          color: Colors.white.withOpacity(0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -60,7 +63,8 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                       fillColor: Colors.white.withOpacity(0.1),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                              icon: Icon(Icons.clear,
+                                  color: Colors.white.withOpacity(0.7)),
                               onPressed: () {
                                 setState(() {
                                   _searchController.clear();
@@ -79,9 +83,9 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Active Swimmers List
               Expanded(
                 child: _buildActiveSwimmersList(),
@@ -301,7 +305,7 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
   Widget _buildActiveSwimmersList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('swimmers')
+          .collection(AppCollections.swimmers)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -340,7 +344,8 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
         final activeSwimmers = allSwimmers.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
           final name = data['name']?.toString().toLowerCase() ?? '';
-          final isActive = data['subscriptionStatus'] == 'Active';
+          final isActive =
+              data[AppFields.subscriptionStatus] == AppStatuses.active;
           return isActive && name.contains(_searchQuery);
         }).toList();
 
@@ -369,7 +374,9 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchQuery.isEmpty ? 'No Active Subscriptions' : 'No Results Found',
+                    _searchQuery.isEmpty
+                        ? 'No Active Subscriptions'
+                        : 'No Results Found',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -379,7 +386,7 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _searchQuery.isEmpty 
+                    _searchQuery.isEmpty
                         ? 'All subscriptions are expired or pending'
                         : 'Try a different search term',
                     style: TextStyle(
@@ -399,7 +406,7 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
           itemBuilder: (context, index) {
             final swimmer = activeSwimmers[index];
             final data = swimmer.data() as Map<String, dynamic>;
-            
+
             return _buildWaterSwimmerCard(
               context,
               swimmerId: swimmer.id,
@@ -494,7 +501,8 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.green.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
@@ -511,7 +519,8 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: groupColor.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
@@ -530,17 +539,21 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Info Rows
                 _buildWaterInfoRow(Icons.pool_rounded, 'Level: $level'),
                 _buildWaterInfoRow(Icons.phone_rounded, 'Phone: $phone'),
                 _buildWaterInfoRow(Icons.email_rounded, 'Email: $email'),
-                _buildWaterInfoRow(Icons.calendar_today_rounded, 'Joined: $joinDate'),
-                _buildWaterInfoRow(Icons.schedule_rounded, 'Days: $trainingDays'),
-                _buildWaterInfoRow(Icons.access_time_rounded, 'Time: $trainingTime'),
-                _buildWaterInfoRow(Icons.contact_emergency_rounded, 'Emergency: $emergencyContact'),
+                _buildWaterInfoRow(
+                    Icons.calendar_today_rounded, 'Joined: $joinDate'),
+                _buildWaterInfoRow(
+                    Icons.schedule_rounded, 'Days: $trainingDays'),
+                _buildWaterInfoRow(
+                    Icons.access_time_rounded, 'Time: $trainingTime'),
+                _buildWaterInfoRow(Icons.contact_emergency_rounded,
+                    'Emergency: $emergencyContact'),
               ],
             ),
           ),
@@ -560,7 +573,7 @@ class _ActiveSubsScreenState extends State<ActiveSubsScreen> {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 color: Colors.white.withOpacity(0.8),
                 fontFamily: 'SF Pro',
               ),

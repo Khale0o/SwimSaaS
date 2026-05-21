@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class ExpiredSubsScreen extends StatefulWidget {
   const ExpiredSubsScreen({super.key});
@@ -20,18 +21,18 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
         children: [
           // نفس Wave Background
           _buildWaveBackground(),
-          
+
           // المحتوى الرئيسي
           Column(
             children: [
               // App Bar مع زر الرجوع
               _buildAppBar(),
-              
+
               // Header Section
               _buildWaterWelcomeSection(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Search Bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -50,8 +51,10 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search expired swimmers...',
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                      prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withOpacity(0.7)),
+                      prefixIcon: Icon(Icons.search,
+                          color: Colors.white.withOpacity(0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -60,7 +63,8 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                       fillColor: Colors.white.withOpacity(0.1),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                              icon: Icon(Icons.clear,
+                                  color: Colors.white.withOpacity(0.7)),
                               onPressed: () {
                                 setState(() {
                                   _searchController.clear();
@@ -79,9 +83,9 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Expired Swimmers List
               Expanded(
                 child: _buildExpiredSwimmersList(),
@@ -301,7 +305,7 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
   Widget _buildExpiredSwimmersList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('swimmers')
+          .collection(AppCollections.swimmers)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -340,7 +344,8 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
         final expiredSwimmers = allSwimmers.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
           final name = data['name']?.toString().toLowerCase() ?? '';
-          final isExpired = data['subscriptionStatus'] == 'Expired';
+          final isExpired =
+              data[AppFields.subscriptionStatus] == AppStatuses.expired;
           return isExpired && name.contains(_searchQuery);
         }).toList();
 
@@ -369,7 +374,9 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchQuery.isEmpty ? 'No Expired Subscriptions' : 'No Results Found',
+                    _searchQuery.isEmpty
+                        ? 'No Expired Subscriptions'
+                        : 'No Results Found',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -379,7 +386,7 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _searchQuery.isEmpty 
+                    _searchQuery.isEmpty
                         ? 'All subscriptions are active or pending'
                         : 'Try a different search term',
                     style: TextStyle(
@@ -399,7 +406,7 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
           itemBuilder: (context, index) {
             final swimmer = expiredSwimmers[index];
             final data = swimmer.data() as Map<String, dynamic>;
-            
+
             return _buildWaterSwimmerCard(
               context,
               swimmerId: swimmer.id,
@@ -494,7 +501,8 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
@@ -511,7 +519,8 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: groupColor.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
@@ -530,17 +539,21 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Info Rows
                 _buildWaterInfoRow(Icons.pool_rounded, 'Level: $level'),
                 _buildWaterInfoRow(Icons.phone_rounded, 'Phone: $phone'),
                 _buildWaterInfoRow(Icons.email_rounded, 'Email: $email'),
-                _buildWaterInfoRow(Icons.calendar_today_rounded, 'Joined: $joinDate'),
-                _buildWaterInfoRow(Icons.schedule_rounded, 'Days: $trainingDays'),
-                _buildWaterInfoRow(Icons.access_time_rounded, 'Time: $trainingTime'),
-                _buildWaterInfoRow(Icons.contact_emergency_rounded, 'Emergency: $emergencyContact'),
+                _buildWaterInfoRow(
+                    Icons.calendar_today_rounded, 'Joined: $joinDate'),
+                _buildWaterInfoRow(
+                    Icons.schedule_rounded, 'Days: $trainingDays'),
+                _buildWaterInfoRow(
+                    Icons.access_time_rounded, 'Time: $trainingTime'),
+                _buildWaterInfoRow(Icons.contact_emergency_rounded,
+                    'Emergency: $emergencyContact'),
               ],
             ),
           ),
@@ -560,7 +573,7 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 color: Colors.white.withOpacity(0.8),
                 fontFamily: 'SF Pro',
               ),

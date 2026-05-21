@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/screens/login_screen.dart';
 import 'dashboard_screen.dart';
 import 'evaluation_screen.dart';
@@ -36,13 +37,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _checkAdminStatus() async {
     try {
       final userDoc = await _firestore
-          .collection('users')
+          .collection(AppCollections.users)
           .doc(_auth.currentUser?.uid)
           .get();
 
       if (userDoc.exists) {
         setState(() {
-          _isAdmin = userDoc['isAdmin'] ?? false;
+          _isAdmin = userDoc[AppFields.isAdmin] ?? false;
           _checkingAdmin = false;
           _initializePages();
         });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class EvaluationScreen extends StatefulWidget {
   const EvaluationScreen({super.key});
@@ -16,19 +17,19 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
 
   Stream<List<QueryDocumentSnapshot>> _getSwimmersWithoutEvaluation() {
     return FirebaseFirestore.instance
-        .collection('swimmers')
+        .collection(AppCollections.swimmers)
         .snapshots()
         .asyncMap((swimmersSnapshot) async {
       final swimmers = swimmersSnapshot.docs;
-      
+
       final evaluationsSnapshot = await FirebaseFirestore.instance
-          .collection('Evaluations')
+          .collection(AppCollections.evaluations)
           .get();
-      
+
       final evaluatedSwimmerNames = evaluationsSnapshot.docs
           .map((doc) => doc['name']?.toString().toLowerCase() ?? '')
           .toSet();
-      
+
       return swimmers.where((swimmer) {
         final swimmerName = swimmer['name']?.toString().toLowerCase() ?? '';
         return !evaluatedSwimmerNames.contains(swimmerName);
@@ -38,7 +39,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
 
   Stream<List<QueryDocumentSnapshot>> _getEvaluatedSwimmers() {
     return FirebaseFirestore.instance
-        .collection('Evaluations')
+        .collection(AppCollections.evaluations)
         .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs);
@@ -52,19 +53,19 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
         children: [
           // نفس Wave Background من الـ Dashboard
           _buildWaveBackground(),
-          
+
           // SingleChildScrollView علشان الصفحة كلها تعمل سكرول
           SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
                 const SizedBox(height: 60), // مساحة للـ Safe Area
-                
+
                 // Header Section بنفس تصميم الـ Dashboard
                 _buildWaterWelcomeSection(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Switch بين السباحين
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -86,8 +87,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _showEvaluatedSwimmers 
-                              ? 'Evaluated Swimmers' 
+                          _showEvaluatedSwimmers
+                              ? 'Evaluated Swimmers'
                               : 'Swimmers Without Evaluation',
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
@@ -111,7 +112,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                               activeTrackColor: const Color(0xFF4CAF50),
                               inactiveThumbColor: Colors.white,
                               inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                             ),
                           ),
                         ),
@@ -119,9 +121,9 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Search Bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -139,11 +141,13 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: _showEvaluatedSwimmers 
-                            ? 'Search evaluated swimmers...' 
+                        hintText: _showEvaluatedSwimmers
+                            ? 'Search evaluated swimmers...'
                             : 'Search swimmers without evaluation...',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                        prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                        hintStyle:
+                            TextStyle(color: Colors.white.withOpacity(0.7)),
+                        prefixIcon: Icon(Icons.search,
+                            color: Colors.white.withOpacity(0.7)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -152,7 +156,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                         fillColor: Colors.white.withOpacity(0.1),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                                icon: Icon(Icons.clear,
+                                    color: Colors.white.withOpacity(0.7)),
                                 onPressed: () {
                                   setState(() {
                                     _searchController.clear();
@@ -171,21 +176,21 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Swimmers List - بدون ListView.builder علشان مايحصلش double scroll
                 _showEvaluatedSwimmers
                     ? _buildEvaluatedSwimmersList()
                     : _buildNonEvaluatedSwimmersList(),
-                
+
                 const SizedBox(height: 100), // مساحة للنافجيشن بار
               ],
             ),
           ),
         ],
       ),
-      
+
       // Floating Action Button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -371,7 +376,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
         }
 
         final swimmers = snapshot.data!;
-        
+
         final filteredSwimmers = swimmers.where((swimmer) {
           final name = swimmer['name']?.toString().toLowerCase() ?? '';
           return name.contains(_searchQuery);
@@ -389,12 +394,13 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
         // استخدام Column بدل ListView.builder علشان مايحصلش double scroll
         return Column(
           children: [
-            ...filteredSwimmers.map((swimmer) => 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: _buildWaterSwimmerCard(context, swimmer),
-              )
-            ).toList(),
+            ...filteredSwimmers
+                .map((swimmer) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: _buildWaterSwimmerCard(context, swimmer),
+                    ))
+                .toList(),
             const SizedBox(height: 20),
           ],
         );
@@ -415,7 +421,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
         }
 
         final evaluations = snapshot.data!;
-        
+
         final filteredEvaluations = evaluations.where((eval) {
           final name = eval['name']?.toString().toLowerCase() ?? '';
           return name.contains(_searchQuery);
@@ -433,12 +439,13 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
         // استخدام Column بدل ListView.builder علشان مايحصلش double scroll
         return Column(
           children: [
-            ...filteredEvaluations.map((evaluation) => 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: _buildWaterEvaluationCard(context, evaluation),
-              )
-            ).toList(),
+            ...filteredEvaluations
+                .map((evaluation) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: _buildWaterEvaluationCard(context, evaluation),
+                    ))
+                .toList(),
             const SizedBox(height: 20),
           ],
         );
@@ -446,7 +453,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
     );
   }
 
-  Widget _buildWaterSwimmerCard(BuildContext context, QueryDocumentSnapshot swimmer) {
+  Widget _buildWaterSwimmerCard(
+      BuildContext context, QueryDocumentSnapshot swimmer) {
     final name = swimmer['name'] ?? 'Unknown';
     final level = swimmer['level'] ?? 'N/A';
     final joinDate = swimmer['joinDate'] ?? '';
@@ -525,7 +533,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                         ],
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.add_circle, color: Colors.white, size: 20),
+                        icon: const Icon(Icons.add_circle,
+                            color: Colors.white, size: 20),
                         onPressed: () {
                           _showAddEvaluationForSwimmer(context, swimmer);
                         },
@@ -534,19 +543,23 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Info Rows
                 _buildWaterInfoRow(Icons.pool_rounded, 'Level: $level'),
-                _buildWaterInfoRow(Icons.calendar_today_rounded, 'Join Date: ${_formatDate(joinDate)}'),
-                if (medicalNotes.isNotEmpty) _buildWaterInfoRow(Icons.medical_services_rounded, 'Medical Notes: $medicalNotes'),
-                
+                _buildWaterInfoRow(Icons.calendar_today_rounded,
+                    'Join Date: ${_formatDate(joinDate)}'),
+                if (medicalNotes.isNotEmpty)
+                  _buildWaterInfoRow(Icons.medical_services_rounded,
+                      'Medical Notes: $medicalNotes'),
+
                 const SizedBox(height: 12),
-                
+
                 // Status Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFF9800), Color(0xFFFFB74D)],
@@ -556,7 +569,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: Colors.white.withOpacity(0.9), size: 16),
+                      Icon(Icons.warning_amber_rounded,
+                          color: Colors.white.withOpacity(0.9), size: 16),
                       const SizedBox(width: 8),
                       const Text(
                         'No evaluation yet',
@@ -578,14 +592,15 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
     );
   }
 
-  Widget _buildWaterEvaluationCard(BuildContext context, QueryDocumentSnapshot doc) {
+  Widget _buildWaterEvaluationCard(
+      BuildContext context, QueryDocumentSnapshot doc) {
     final name = doc['name'] ?? 'Unknown';
     final level = doc['level'] ?? 'N/A';
     final score = doc['score'] ?? 0;
     final notes = doc['notes'] ?? '';
     final date = doc['date'] ?? '';
     final trainingOptions = doc['trainingDays'] ?? 'Not specified';
-    final subsStatus = doc['subscriptionStatus'] ?? 'Not specified';
+    final subsStatus = doc[AppFields.subscriptionStatus] ?? 'Not specified';
     final passedStatus = doc['passed'] ?? 'Not specified';
 
     Color statusColor = _getStatusColor(passedStatus);
@@ -656,7 +671,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                         border: Border.all(color: statusColor.withOpacity(0.3)),
                       ),
                       child: PopupMenuButton<String>(
-                        icon: Icon(Icons.more_vert, color: Colors.white.withOpacity(0.8)),
+                        icon: Icon(Icons.more_vert,
+                            color: Colors.white.withOpacity(0.8)),
                         onSelected: (value) {
                           if (value == 'edit') {
                             _showEditDialog(context, doc);
@@ -671,7 +687,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                               children: [
                                 Icon(Icons.edit, color: Colors.blue[300]),
                                 const SizedBox(width: 8),
-                                const Text('Edit', style: TextStyle(fontFamily: 'SF Pro')),
+                                const Text('Edit',
+                                    style: TextStyle(fontFamily: 'SF Pro')),
                               ],
                             ),
                           ),
@@ -681,7 +698,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                               children: [
                                 Icon(Icons.delete, color: Colors.red[300]),
                                 const SizedBox(width: 8),
-                                const Text('Delete', style: TextStyle(fontFamily: 'SF Pro')),
+                                const Text('Delete',
+                                    style: TextStyle(fontFamily: 'SF Pro')),
                               ],
                             ),
                           ),
@@ -690,22 +708,26 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Info Rows
                 _buildWaterInfoRow(Icons.pool_rounded, 'Level: $level'),
-                _buildWaterInfoRow(Icons.schedule_rounded, 'Training Days: $trainingOptions'),
-                _buildWaterInfoRow(Icons.credit_card_rounded, 'Subscription: $subsStatus'),
+                _buildWaterInfoRow(
+                    Icons.schedule_rounded, 'Training Days: $trainingOptions'),
+                _buildWaterInfoRow(
+                    Icons.credit_card_rounded, 'Subscription: $subsStatus'),
                 _buildWaterInfoRow(Icons.flag_rounded, 'Status: $passedStatus'),
                 _buildWaterInfoRow(Icons.score_rounded, 'Score: $score/10'),
-                if (notes.isNotEmpty) _buildWaterInfoRow(Icons.notes_rounded, 'Notes: $notes'),
-                
+                if (notes.isNotEmpty)
+                  _buildWaterInfoRow(Icons.notes_rounded, 'Notes: $notes'),
+
                 const SizedBox(height: 12),
-                
+
                 // Date Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -739,7 +761,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 color: Colors.white.withOpacity(0.8),
                 fontFamily: 'SF Pro',
               ),
@@ -860,14 +882,16 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
     return 'Unknown date';
   }
 
-
   // ✏️ Edit Dialog
   void _showEditDialog(BuildContext context, QueryDocumentSnapshot doc) {
     String? passedValue = doc['passed']?.toString();
-    String? subsValue = doc['subscriptionStatus']?.toString();
-    final trainingController = TextEditingController(text: doc['trainingDays']?.toString() ?? '');
-    final scoreController = TextEditingController(text: doc['score']?.toString() ?? '0');
-    final notesController = TextEditingController(text: doc['notes']?.toString() ?? '');
+    String? subsValue = doc[AppFields.subscriptionStatus]?.toString();
+    final trainingController =
+        TextEditingController(text: doc['trainingDays']?.toString() ?? '');
+    final scoreController =
+        TextEditingController(text: doc['score']?.toString() ?? '0');
+    final notesController =
+        TextEditingController(text: doc['notes']?.toString() ?? '');
 
     showDialog(
       context: context,
@@ -897,7 +921,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              
+
               // Subscription Status Dropdown
               DropdownButtonFormField<String>(
                 value: subsValue,
@@ -906,8 +930,10 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'Active', child: Text('Active')),
-                  DropdownMenuItem(value: 'Expired', child: Text('Expired')),
+                  DropdownMenuItem(
+                      value: AppStatuses.active, child: Text('Active')),
+                  DropdownMenuItem(
+                      value: AppStatuses.expired, child: Text('Expired')),
                   DropdownMenuItem(value: 'Pending', child: Text('Pending')),
                 ],
                 onChanged: (value) {
@@ -915,7 +941,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              
+
               // Training Days TextField
               TextField(
                 controller: trainingController,
@@ -925,7 +951,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               TextField(
                 controller: scoreController,
                 decoration: const InputDecoration(
@@ -935,7 +961,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
-              
+
               TextField(
                 controller: notesController,
                 maxLines: 3,
@@ -957,11 +983,11 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
             onPressed: () async {
               try {
                 await FirebaseFirestore.instance
-                    .collection('Evaluations')
+                    .collection(AppCollections.evaluations)
                     .doc(doc.id)
                     .update({
                   'passed': passedValue,
-                  'subscriptionStatus': subsValue,
+                  AppFields.subscriptionStatus: subsValue,
                   'trainingDays': trainingController.text,
                   'score': int.tryParse(scoreController.text) ?? 0,
                   'notes': notesController.text,
@@ -999,10 +1025,11 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
   }
 
   // ➕ دالة علشان تضيف تقييم لسباح محدد
-  void _showAddEvaluationForSwimmer(BuildContext context, QueryDocumentSnapshot swimmer) {
+  void _showAddEvaluationForSwimmer(
+      BuildContext context, QueryDocumentSnapshot swimmer) {
     final name = swimmer['name'] ?? '';
     final level = swimmer['level'] ?? '';
-    
+
     String? passedValue;
     String? subsValue;
     final trainingController = TextEditingController();
@@ -1026,7 +1053,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 subtitle: Text('Level: $level'),
               ),
               const Divider(),
-              
+
               // Passed Status Dropdown
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
@@ -1043,7 +1070,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              
+
               // Subscription Status Dropdown
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
@@ -1051,8 +1078,10 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'Active', child: Text('Active')),
-                  DropdownMenuItem(value: 'Expired', child: Text('Expired')),
+                  DropdownMenuItem(
+                      value: AppStatuses.active, child: Text('Active')),
+                  DropdownMenuItem(
+                      value: AppStatuses.expired, child: Text('Expired')),
                   DropdownMenuItem(value: 'Pending', child: Text('Pending')),
                 ],
                 onChanged: (value) {
@@ -1060,7 +1089,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              
+
               // Training Days TextField
               TextField(
                 controller: trainingController,
@@ -1070,7 +1099,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               TextField(
                 controller: scoreController,
                 decoration: const InputDecoration(
@@ -1080,7 +1109,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
-              
+
               TextField(
                 controller: notesController,
                 maxLines: 3,
@@ -1100,7 +1129,9 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (passedValue == null || subsValue == null || trainingController.text.isEmpty) {
+              if (passedValue == null ||
+                  subsValue == null ||
+                  trainingController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Please fill all required fields'),
@@ -1112,12 +1143,12 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
 
               try {
                 await FirebaseFirestore.instance
-                    .collection('Evaluations')
+                    .collection(AppCollections.evaluations)
                     .add({
                   'name': name,
                   'level': level,
                   'passed': passedValue,
-                  'subscriptionStatus': subsValue,
+                  AppFields.subscriptionStatus: subsValue,
                   'trainingDays': trainingController.text,
                   'score': int.tryParse(scoreController.text) ?? 0,
                   'notes': notesController.text,
@@ -1184,7 +1215,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               TextField(
                 controller: levelController,
                 decoration: const InputDecoration(
@@ -1193,7 +1224,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               // Passed Status Dropdown
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
@@ -1210,7 +1241,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              
+
               // Subscription Status Dropdown
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
@@ -1218,8 +1249,10 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'Active', child: Text('Active')),
-                  DropdownMenuItem(value: 'Expired', child: Text('Expired')),
+                  DropdownMenuItem(
+                      value: AppStatuses.active, child: Text('Active')),
+                  DropdownMenuItem(
+                      value: AppStatuses.expired, child: Text('Expired')),
                   DropdownMenuItem(value: 'Pending', child: Text('Pending')),
                 ],
                 onChanged: (value) {
@@ -1227,7 +1260,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              
+
               // Training Days TextField
               TextField(
                 controller: trainingController,
@@ -1237,7 +1270,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               TextField(
                 controller: scoreController,
                 decoration: const InputDecoration(
@@ -1247,7 +1280,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
-              
+
               TextField(
                 controller: notesController,
                 maxLines: 3,
@@ -1267,8 +1300,11 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.isEmpty || levelController.text.isEmpty ||
-                  passedValue == null || subsValue == null || trainingController.text.isEmpty) {
+              if (nameController.text.isEmpty ||
+                  levelController.text.isEmpty ||
+                  passedValue == null ||
+                  subsValue == null ||
+                  trainingController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Please fill all required fields'),
@@ -1280,12 +1316,12 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
 
               try {
                 await FirebaseFirestore.instance
-                    .collection('Evaluations')
+                    .collection(AppCollections.evaluations)
                     .add({
                   'name': nameController.text,
                   'level': levelController.text,
                   'passed': passedValue,
-                  'subscriptionStatus': subsValue,
+                  AppFields.subscriptionStatus: subsValue,
                   'trainingDays': trainingController.text,
                   'score': int.tryParse(scoreController.text) ?? 0,
                   'notes': notesController.text,
@@ -1329,7 +1365,8 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Evaluation'),
-        content: const Text('Are you sure you want to delete this evaluation? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this evaluation? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1339,7 +1376,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
             onPressed: () async {
               try {
                 await FirebaseFirestore.instance
-                    .collection('Evaluations')
+                    .collection(AppCollections.evaluations)
                     .doc(docId)
                     .delete();
 

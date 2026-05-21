@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class ParentsScreen extends StatefulWidget {
   const ParentsScreen({super.key});
@@ -24,15 +25,14 @@ class _ParentsScreenState extends State<ParentsScreen> {
 
   Future<void> _fetchSwimmersData() async {
     try {
-      final QuerySnapshot querySnapshot = await _firestore
-          .collection('swimmers')
-          .get();
+      final QuerySnapshot querySnapshot =
+          await _firestore.collection(AppCollections.swimmers).get();
 
       List<Map<String, dynamic>> swimmersList = [];
 
       for (var doc in querySnapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        
+
         String swimmerName = data['name'] ?? 'No Name';
         String emergencyContact = data['emergencyContact'] ?? 'No Contact';
         String phone = data['phone'] ?? 'No Phone';
@@ -49,7 +49,8 @@ class _ParentsScreenState extends State<ParentsScreen> {
           'joinDate': data['joinDate'] ?? 'No Date',
           'medicalNotes': data['medicalNotes'] ?? 'No Notes',
           'trainingTime': data['trainingTime'] ?? 'Not Set',
-          'subscriptionStatus': data['subscriptionStatus'] ?? 'Unknown',
+          AppFields.subscriptionStatus:
+              data[AppFields.subscriptionStatus] ?? 'Unknown',
         });
       }
 
@@ -59,7 +60,6 @@ class _ParentsScreenState extends State<ParentsScreen> {
           _isLoading = false;
         });
       }
-
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -87,17 +87,13 @@ class _ParentsScreenState extends State<ParentsScreen> {
       body: Stack(
         children: [
           _buildWaveBackground(),
-          
           SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
                 const SizedBox(height: 60),
-                
                 _buildWaterWelcomeSection(),
-                
                 const SizedBox(height: 24),
-                
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
@@ -115,8 +111,10 @@ class _ParentsScreenState extends State<ParentsScreen> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search swimmers by name...',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                        prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                        hintStyle:
+                            TextStyle(color: Colors.white.withOpacity(0.7)),
+                        prefixIcon: Icon(Icons.search,
+                            color: Colors.white.withOpacity(0.7)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -125,7 +123,8 @@ class _ParentsScreenState extends State<ParentsScreen> {
                         fillColor: Colors.white.withOpacity(0.1),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                                icon: Icon(Icons.clear,
+                                    color: Colors.white.withOpacity(0.7)),
                                 onPressed: () {
                                   setState(() {
                                     _searchController.clear();
@@ -144,27 +143,19 @@ class _ParentsScreenState extends State<ParentsScreen> {
                     ),
                   ),
                 ),
-                
                 const SizedBox(height: 16),
-                
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildStatsGrid(),
                 ),
-                
                 const SizedBox(height: 24),
-                
-                _isLoading
-                    ? _buildLoadingWidget()
-                    : _buildSwimmersList(),
-                
+                _isLoading ? _buildLoadingWidget() : _buildSwimmersList(),
                 const SizedBox(height: 100),
               ],
             ),
           ),
         ],
       ),
-      
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddSwimmerDialog,
         backgroundColor: const Color(0xFF42A5F5),
@@ -342,7 +333,7 @@ class _ParentsScreenState extends State<ParentsScreen> {
 
     final totalSwimmers = filteredSwimmers.length;
     final activeSubs = filteredSwimmers.where((swimmer) {
-      return swimmer['subscriptionStatus'] == 'Active';
+      return swimmer[AppFields.subscriptionStatus] == AppStatuses.active;
     }).length;
     final withEmergencyContact = filteredSwimmers.where((swimmer) {
       return swimmer['emergencyContact'] != 'No Contact';
@@ -351,21 +342,28 @@ class _ParentsScreenState extends State<ParentsScreen> {
     return Row(
       children: [
         Expanded(
-          child: _buildWaterStatCard("Total", totalSwimmers.toString(), Icons.people_rounded, [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
+          child: _buildWaterStatCard("Total", totalSwimmers.toString(),
+              Icons.people_rounded, [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildWaterStatCard("Active", activeSubs.toString(), Icons.check_circle_rounded, [Colors.green, Color(0xFF66BB6A)]),
+          child: _buildWaterStatCard("Active", activeSubs.toString(),
+              Icons.check_circle_rounded, [Colors.green, Color(0xFF66BB6A)]),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildWaterStatCard("Emergency", withEmergencyContact.toString(), Icons.contact_emergency_rounded, [Colors.orange, Color(0xFFFFB74D)]),
+          child: _buildWaterStatCard(
+              "Emergency",
+              withEmergencyContact.toString(),
+              Icons.contact_emergency_rounded,
+              [Colors.orange, Color(0xFFFFB74D)]),
         ),
       ],
     );
   }
 
-  Widget _buildWaterStatCard(String title, String value, IconData icon, List<Color> gradientColors) {
+  Widget _buildWaterStatCard(
+      String title, String value, IconData icon, List<Color> gradientColors) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -468,19 +466,20 @@ class _ParentsScreenState extends State<ParentsScreen> {
 
     return Column(
       children: [
-        ...filteredSwimmers.map((swimmer) => 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: _buildWaterSwimmerCard(swimmer),
-          )
-        ).toList(),
+        ...filteredSwimmers
+            .map((swimmer) => Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: _buildWaterSwimmerCard(swimmer),
+                ))
+            .toList(),
         const SizedBox(height: 20),
       ],
     );
   }
 
   Widget _buildWaterSwimmerCard(Map<String, dynamic> swimmer) {
-    Color statusColor = _getStatusColor(swimmer['subscriptionStatus']);
+    Color statusColor = _getStatusColor(swimmer[AppFields.subscriptionStatus]);
     Color levelColor = _getLevelColor(swimmer['level']);
 
     return Container(
@@ -543,14 +542,16 @@ class _ParentsScreenState extends State<ParentsScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: statusColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: statusColor.withOpacity(0.3)),
+                            border:
+                                Border.all(color: statusColor.withOpacity(0.3)),
                           ),
                           child: Text(
-                            swimmer['subscriptionStatus'],
+                            swimmer[AppFields.subscriptionStatus],
                             style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
@@ -560,7 +561,8 @@ class _ParentsScreenState extends State<ParentsScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: levelColor.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
@@ -579,21 +581,23 @@ class _ParentsScreenState extends State<ParentsScreen> {
                     ),
                   ],
                 ),
-                
                 const SizedBox(height: 16),
-                
-                _buildWaterInfoRow(Icons.family_restroom_rounded, 'Emergency Contact: ${swimmer['emergencyContact']}'),
-                _buildWaterInfoRow(Icons.phone_rounded, 'Phone: ${swimmer['phoneNumber']}'),
-                _buildWaterInfoRow(Icons.email_rounded, 'Email: ${swimmer['email']}'),
-                _buildWaterInfoRow(Icons.pool_rounded, 'Level: ${swimmer['level']}'),
-                _buildWaterInfoRow(Icons.calendar_today_rounded, 'Join Date: ${swimmer['joinDate']}'),
-                _buildWaterInfoRow(Icons.schedule_rounded, 'Training: ${swimmer['trainingTime']}'),
-                
-                if (swimmer['medicalNotes'] != 'No Notes') 
-                  _buildWaterInfoRow(Icons.medical_services_rounded, 'Medical Notes: ${swimmer['medicalNotes']}'),
-                
+                _buildWaterInfoRow(Icons.family_restroom_rounded,
+                    'Emergency Contact: ${swimmer['emergencyContact']}'),
+                _buildWaterInfoRow(
+                    Icons.phone_rounded, 'Phone: ${swimmer['phoneNumber']}'),
+                _buildWaterInfoRow(
+                    Icons.email_rounded, 'Email: ${swimmer['email']}'),
+                _buildWaterInfoRow(
+                    Icons.pool_rounded, 'Level: ${swimmer['level']}'),
+                _buildWaterInfoRow(Icons.calendar_today_rounded,
+                    'Join Date: ${swimmer['joinDate']}'),
+                _buildWaterInfoRow(Icons.schedule_rounded,
+                    'Training: ${swimmer['trainingTime']}'),
+                if (swimmer['medicalNotes'] != 'No Notes')
+                  _buildWaterInfoRow(Icons.medical_services_rounded,
+                      'Medical Notes: ${swimmer['medicalNotes']}'),
                 const SizedBox(height: 12),
-                
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -646,7 +650,7 @@ class _ParentsScreenState extends State<ParentsScreen> {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 color: Colors.white.withOpacity(0.8),
                 fontFamily: 'SF Pro',
               ),
@@ -713,7 +717,7 @@ class _ParentsScreenState extends State<ParentsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _searchQuery.isEmpty 
+            _searchQuery.isEmpty
                 ? 'Add your first swimmer to get started'
                 : 'Try a different search term',
             style: TextStyle(
@@ -793,7 +797,8 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emergencyContactController = TextEditingController();
+  final TextEditingController _emergencyContactController =
+      TextEditingController();
   final TextEditingController _medicalNotesController = TextEditingController();
   final TextEditingController _joinDateController = TextEditingController();
 
@@ -830,7 +835,7 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
       });
 
       try {
-        await _firestore.collection('swimmers').add({
+        await _firestore.collection(AppCollections.swimmers).add({
           'name': _nameController.text,
           'email': _emailController.text,
           'phone': _phoneController.text,
@@ -839,15 +844,15 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
           'medicalNotes': _medicalNotesController.text,
           'joinDate': _joinDateController.text,
           'trainingTime': _selectedTrainingTime,
-          'subscriptionStatus': 'Active',
+          AppFields.subscriptionStatus: AppStatuses.active,
           'createdAt': FieldValue.serverTimestamp(),
         });
 
         widget.onSwimmerAdded();
-        
+
         if (!mounted) return;
         Navigator.of(context).pop();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Swimmer added successfully!'),
@@ -932,7 +937,6 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                 ],
               ),
             ),
-            
             Container(
               constraints: const BoxConstraints(maxHeight: 400),
               child: SingleChildScrollView(
@@ -944,13 +948,15 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                     children: [
                       _buildWaterFormField(_nameController, 'Swimmer Name'),
                       const SizedBox(height: 12),
-                      _buildWaterFormField(_emailController, 'Email', keyboardType: TextInputType.emailAddress),
+                      _buildWaterFormField(_emailController, 'Email',
+                          keyboardType: TextInputType.emailAddress),
                       const SizedBox(height: 12),
-                      _buildWaterFormField(_phoneController, 'Phone Number', keyboardType: TextInputType.phone),
+                      _buildWaterFormField(_phoneController, 'Phone Number',
+                          keyboardType: TextInputType.phone),
                       const SizedBox(height: 12),
-                      _buildWaterFormField(_emergencyContactController, 'Emergency Contact'),
+                      _buildWaterFormField(
+                          _emergencyContactController, 'Emergency Contact'),
                       const SizedBox(height: 12),
-                      
                       _buildWaterDropdown(
                         value: _selectedLevel,
                         items: _levels,
@@ -962,7 +968,6 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                         },
                       ),
                       const SizedBox(height: 12),
-                      
                       _buildWaterDropdown(
                         value: _selectedTrainingTime,
                         items: [
@@ -980,13 +985,12 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                         },
                       ),
                       const SizedBox(height: 12),
-                      
                       GestureDetector(
                         onTap: () => _selectDate(context),
-                        child: _buildWaterFormField(_joinDateController, 'Join Date'),
+                        child: _buildWaterFormField(
+                            _joinDateController, 'Join Date'),
                       ),
                       const SizedBox(height: 12),
-                      
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.1),
@@ -1001,9 +1005,11 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             labelText: 'Medical Notes',
-                            labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                            labelStyle:
+                                TextStyle(color: Colors.white.withOpacity(0.7)),
                             border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                           ),
                         ),
                       ),
@@ -1012,7 +1018,6 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                 ),
               ),
             ),
-            
             Container(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -1032,7 +1037,9 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                         ),
                       ),
                       child: TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text(
                           'Cancel',
                           style: TextStyle(
@@ -1055,13 +1062,14 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
                       ),
                       child: TextButton(
                         onPressed: _isSubmitting ? null : _addSwimmer,
-                        child: _isSubmitting 
+                        child: _isSubmitting
                             ? const SizedBox(
                                 height: 16,
                                 width: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
                                 ),
                               )
                             : const Text(
@@ -1084,7 +1092,8 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
     );
   }
 
-  Widget _buildWaterFormField(TextEditingController controller, String label, {TextInputType? keyboardType}) {
+  Widget _buildWaterFormField(TextEditingController controller, String label,
+      {TextInputType? keyboardType}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
@@ -1101,7 +1110,8 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
           labelText: label,
           labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -1129,7 +1139,8 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
           labelText: label,
           labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         ),
         items: items.map((String item) {
           return DropdownMenuItem<String>(

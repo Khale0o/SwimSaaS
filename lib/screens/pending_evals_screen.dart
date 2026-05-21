@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class PendingEvalsScreen extends StatefulWidget {
   const PendingEvalsScreen({super.key});
@@ -20,18 +21,18 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
         children: [
           // نفس Wave Background
           _buildWaveBackground(),
-          
+
           // المحتوى الرئيسي
           Column(
             children: [
               // App Bar مع زر الرجوع
               _buildAppBar(),
-              
+
               // Header Section
               _buildWaterWelcomeSection(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Search Bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -50,8 +51,10 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search pending evaluations...',
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                      prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withOpacity(0.7)),
+                      prefixIcon: Icon(Icons.search,
+                          color: Colors.white.withOpacity(0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -60,7 +63,8 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                       fillColor: Colors.white.withOpacity(0.1),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                              icon: Icon(Icons.clear,
+                                  color: Colors.white.withOpacity(0.7)),
                               onPressed: () {
                                 setState(() {
                                   _searchController.clear();
@@ -79,9 +83,9 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Pending Evaluations List
               Expanded(
                 child: _buildPendingEvaluationsList(),
@@ -301,7 +305,7 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
   Widget _buildPendingEvaluationsList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('Evaluations')
+          .collection(AppCollections.evaluations)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -369,7 +373,9 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _searchQuery.isEmpty ? 'No Pending Evaluations' : 'No Results Found',
+                    _searchQuery.isEmpty
+                        ? 'No Pending Evaluations'
+                        : 'No Results Found',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -379,7 +385,7 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _searchQuery.isEmpty 
+                    _searchQuery.isEmpty
                         ? 'All evaluations are completed'
                         : 'Try a different search term',
                     style: TextStyle(
@@ -399,7 +405,7 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
           itemBuilder: (context, index) {
             final evaluation = pendingEvaluations[index];
             final data = evaluation.data() as Map<String, dynamic>;
-            
+
             return _buildWaterEvaluationCard(
               context,
               evaluationId: evaluation.id,
@@ -492,7 +498,8 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.purple.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
@@ -509,7 +516,8 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: groupColor.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
@@ -528,19 +536,22 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Info Rows
                 _buildWaterInfoRow(Icons.pool_rounded, 'Level: $level'),
                 _buildWaterInfoRow(Icons.score_rounded, 'Score: $score'),
                 _buildWaterInfoRow(Icons.notes_rounded, 'Notes: $notes'),
-                _buildWaterInfoRow(Icons.calendar_today_rounded, 'Date: ${_formatDate(date)}'),
-                _buildWaterInfoRow(Icons.schedule_rounded, 'Days: $trainingDays'),
-                _buildWaterInfoRow(Icons.access_time_rounded, 'Time: $trainingTime'),
-                
+                _buildWaterInfoRow(
+                    Icons.calendar_today_rounded, 'Date: ${_formatDate(date)}'),
+                _buildWaterInfoRow(
+                    Icons.schedule_rounded, 'Days: $trainingDays'),
+                _buildWaterInfoRow(
+                    Icons.access_time_rounded, 'Time: $trainingTime'),
+
                 const SizedBox(height: 12),
-                
+
                 // Evaluation Buttons
                 Row(
                   children: [
@@ -560,7 +571,8 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                         ),
                         child: TextButton.icon(
                           onPressed: () {
-                            _showEvaluationDialog(context, evaluationId, name, false);
+                            _showEvaluationDialog(
+                                context, evaluationId, name, false);
                           },
                           icon: const Icon(
                             Icons.close_rounded,
@@ -595,7 +607,8 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                         ),
                         child: TextButton.icon(
                           onPressed: () {
-                            _showEvaluationDialog(context, evaluationId, name, true);
+                            _showEvaluationDialog(
+                                context, evaluationId, name, true);
                           },
                           icon: const Icon(
                             Icons.check_rounded,
@@ -623,7 +636,8 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
     );
   }
 
-  void _showEvaluationDialog(BuildContext context, String evaluationId, String name, bool passed) {
+  void _showEvaluationDialog(
+      BuildContext context, String evaluationId, String name, bool passed) {
     final TextEditingController notesController = TextEditingController();
     final TextEditingController scoreController = TextEditingController();
 
@@ -665,7 +679,9 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: passed ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                        color: passed
+                            ? Colors.green.withOpacity(0.2)
+                            : Colors.red.withOpacity(0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -689,7 +705,6 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                   ],
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -708,9 +723,11 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Score (0-100)',
-                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                          labelStyle:
+                              TextStyle(color: Colors.white.withOpacity(0.7)),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                         ),
                       ),
                     ),
@@ -729,16 +746,17 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Evaluation Notes',
-                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                          labelStyle:
+                              TextStyle(color: Colors.white.withOpacity(0.7)),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -775,7 +793,7 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: passed 
+                            colors: passed
                                 ? [Colors.green, const Color(0xFF66BB6A)]
                                 : [Colors.red, const Color(0xFFFF5252)],
                           ),
@@ -821,7 +839,10 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
     required String notes,
   }) async {
     try {
-      await FirebaseFirestore.instance.collection('Evaluations').doc(evaluationId).update({
+      await FirebaseFirestore.instance
+          .collection(AppCollections.evaluations)
+          .doc(evaluationId)
+          .update({
         'passed': passed ? 'Yes' : 'No',
         'score': int.tryParse(score) ?? 0,
         'notes': notes.isNotEmpty ? notes : 'No additional notes',
@@ -832,9 +853,12 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: passed ? Colors.green : Colors.orange,
-            content: Text(passed ? '✅ Evaluation passed successfully!' : '❌ Evaluation failed'),
+            content: Text(passed
+                ? '✅ Evaluation passed successfully!'
+                : '❌ Evaluation failed'),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -845,7 +869,8 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
             backgroundColor: Colors.red,
             content: Text('Error updating evaluation: $e'),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -863,7 +888,7 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 color: Colors.white.withOpacity(0.8),
                 fontFamily: 'SF Pro',
               ),
@@ -880,12 +905,18 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
 
   String _getGroupTime(int groupNumber) {
     switch (groupNumber) {
-      case 1: return '4:00 PM - 5:30 PM';
-      case 2: return '5:30 PM - 7:00 PM';
-      case 3: return '7:00 PM - 8:30 PM';
-      case 4: return '8:30 PM - 10:00 PM';
-      case 5: return '10:00 AM - 11:30 AM';
-      default: return 'Not Scheduled';
+      case 1:
+        return '4:00 PM - 5:30 PM';
+      case 2:
+        return '5:30 PM - 7:00 PM';
+      case 3:
+        return '7:00 PM - 8:30 PM';
+      case 4:
+        return '8:30 PM - 10:00 PM';
+      case 5:
+        return '10:00 AM - 11:30 AM';
+      default:
+        return 'Not Scheduled';
     }
   }
 

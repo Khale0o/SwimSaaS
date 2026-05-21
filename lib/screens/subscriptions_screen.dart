@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:swim/core/constants/app_constants.dart';
 
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
@@ -17,35 +18,36 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
   // Function to get subscription status from data
   String _getSubscriptionStatus(Map<String, dynamic> data) {
-    final subscriptionStatus = data['subscriptionStatus']?.toString().toLowerCase();
+    final subscriptionStatus =
+        data[AppFields.subscriptionStatus]?.toString().toLowerCase();
     final expiry = data['subscriptionExpiry'];
-    
+
     // Priority for subscriptionStatus field
     if (subscriptionStatus != null) {
-      if (subscriptionStatus == 'active') {
-        return "Active";
-      } else if (subscriptionStatus == 'expired') {
-        return "Expired";
+      if (subscriptionStatus == AppStatuses.active.toLowerCase()) {
+        return AppStatuses.active;
+      } else if (subscriptionStatus == AppStatuses.expired.toLowerCase()) {
+        return AppStatuses.expired;
       }
     }
-    
+
     // If no status, use expiry date
     if (expiry != null) {
       final expiryDate = (expiry as Timestamp).toDate();
       final now = DateTime.now();
-      
+
       if (expiryDate.isBefore(now)) {
         return "Expired";
       }
-      
+
       final daysUntilExpiry = expiryDate.difference(now).inDays;
       if (daysUntilExpiry <= 7) {
         return "Expiring Soon";
       }
-      
-      return "Active";
+
+      return AppStatuses.active;
     }
-    
+
     // If no status and no expiry, consider expired
     return "Expired";
   }
@@ -60,7 +62,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   }
 
   // Function to filter swimmers based on current tab and search
-  List<QueryDocumentSnapshot> _filterSwimmers(List<QueryDocumentSnapshot> allSwimmers) {
+  List<QueryDocumentSnapshot> _filterSwimmers(
+      List<QueryDocumentSnapshot> allSwimmers) {
     // First filter by search query
     var filtered = allSwimmers.where((doc) {
       final data = doc.data() as Map<String, dynamic>;
@@ -74,7 +77,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     } else if (_currentTabIndex == 1) {
       return filtered.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        return _getSubscriptionStatus(data) == "Active";
+        return _getSubscriptionStatus(data) == AppStatuses.active;
       }).toList();
     } else if (_currentTabIndex == 2) {
       return filtered.where((doc) {
@@ -84,7 +87,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     } else if (_currentTabIndex == 3) {
       return filtered.where((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        return _getSubscriptionStatus(data) == "Expired";
+        return _getSubscriptionStatus(data) == AppStatuses.expired;
       }).toList();
     }
 
@@ -100,9 +103,9 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     for (final doc in allSwimmers) {
       final data = doc.data() as Map<String, dynamic>;
       final status = _getSubscriptionStatus(data);
-      
+
       switch (status) {
-        case "Active":
+        case AppStatuses.active:
           active++;
           break;
         case "Expiring Soon":
@@ -130,19 +133,19 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         children: [
           // نفس Wave Background من الـ Dashboard
           _buildWaveBackground(),
-          
+
           // SingleChildScrollView علشان الصفحة كلها تعمل سكرول
           SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
                 const SizedBox(height: 60), // مساحة للـ Safe Area
-                
+
                 // Header Section بنفس تصميم الـ Dashboard
                 _buildWaterWelcomeSection(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Search Bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -161,8 +164,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search swimmers by name...',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                        prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                        hintStyle:
+                            TextStyle(color: Colors.white.withOpacity(0.7)),
+                        prefixIcon: Icon(Icons.search,
+                            color: Colors.white.withOpacity(0.7)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -171,7 +176,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                         fillColor: Colors.white.withOpacity(0.1),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.7)),
+                                icon: Icon(Icons.clear,
+                                    color: Colors.white.withOpacity(0.7)),
                                 onPressed: () {
                                   setState(() {
                                     _searchController.clear();
@@ -190,14 +196,16 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Quick Stats
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: StreamBuilder<QuerySnapshot>(
-                    stream: _firestore.collection('swimmers').snapshots(),
+                    stream: _firestore
+                        .collection(AppCollections.swimmers)
+                        .snapshots(),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) {
                         return _buildLoadingWidget();
@@ -207,17 +215,17 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                       final counts = _getCategoryCounts(swimmers);
 
                       return _buildStatsGrid(
-                        counts['active']!, 
-                        counts['expiringSoon']!, 
+                        counts['active']!,
+                        counts['expiringSoon']!,
                         counts['expired']!,
                         counts['total']!,
                       );
                     },
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Tabs
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -247,12 +255,14 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Subscriptions List based on selected tab
                 StreamBuilder<QuerySnapshot>(
-                  stream: _firestore.collection('swimmers').snapshots(),
+                  stream: _firestore
+                      .collection(AppCollections.swimmers)
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return _buildLoadingWidget();
@@ -267,25 +277,26 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
                     return Column(
                       children: [
-                        ...filteredSwimmers.map((swimmer) => 
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: _buildWaterSubscriptionCard(swimmer),
-                          )
-                        ).toList(),
+                        ...filteredSwimmers
+                            .map((swimmer) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  child: _buildWaterSubscriptionCard(swimmer),
+                                ))
+                            .toList(),
                         const SizedBox(height: 20),
                       ],
                     );
                   },
                 ),
-                
+
                 const SizedBox(height: 100), // مساحة للنافجيشن بار
               ],
             ),
           ),
         ],
       ),
-      
+
       // Floating Action Button for Bulk Renewal
       floatingActionButton: FloatingActionButton(
         onPressed: _showBulkRenewalDialog,
@@ -297,7 +308,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
   Widget _buildTab(String title, int index, IconData icon) {
     bool isSelected = _currentTabIndex == index;
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -320,14 +331,16 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
             children: [
               Icon(
                 icon,
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                color:
+                    isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                 size: 18,
               ),
               const SizedBox(height: 4),
               Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                  color:
+                      isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'SF Pro',
@@ -505,25 +518,30 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     return Row(
       children: [
         Expanded(
-          child: _buildWaterStatCard("Total", total.toString(), Icons.people_rounded, [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
+          child: _buildWaterStatCard("Total", total.toString(),
+              Icons.people_rounded, [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildWaterStatCard("Active", active.toString(), Icons.check_circle_rounded, [Colors.green, Color(0xFF66BB6A)]),
+          child: _buildWaterStatCard("Active", active.toString(),
+              Icons.check_circle_rounded, [Colors.green, Color(0xFF66BB6A)]),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildWaterStatCard("Expiring", expiring.toString(), Icons.warning_rounded, [Colors.orange, Color(0xFFFFB74D)]),
+          child: _buildWaterStatCard("Expiring", expiring.toString(),
+              Icons.warning_rounded, [Colors.orange, Color(0xFFFFB74D)]),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildWaterStatCard("Expired", expired.toString(), Icons.error_rounded, [Colors.red, Color(0xFFEF5350)]),
+          child: _buildWaterStatCard("Expired", expired.toString(),
+              Icons.error_rounded, [Colors.red, Color(0xFFEF5350)]),
         ),
       ],
     );
   }
 
-  Widget _buildWaterStatCard(String title, String value, IconData icon, List<Color> gradientColors) {
+  Widget _buildWaterStatCard(
+      String title, String value, IconData icon, List<Color> gradientColors) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -625,7 +643,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
     Color statusColor;
     switch (status) {
-      case "Active":
+      case AppStatuses.active:
         statusColor = const Color(0xFF4CAF50);
         break;
       case "Expiring Soon":
@@ -697,7 +715,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -714,22 +733,25 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Info Rows
                 _buildWaterInfoRow(Icons.pool_rounded, 'Level: $level'),
                 _buildWaterInfoRow(Icons.phone_rounded, 'Phone: $phone'),
-                _buildWaterInfoRow(Icons.schedule_rounded, 'Training: $trainingTime'),
-                
-                if (expiryDate != null) 
-                  _buildWaterInfoRow(Icons.calendar_today_rounded, 'Expires: ${DateFormat('dd MMM yyyy').format(expiryDate)}'),
-                
+                _buildWaterInfoRow(
+                    Icons.schedule_rounded, 'Training: $trainingTime'),
+
+                if (expiryDate != null)
+                  _buildWaterInfoRow(Icons.calendar_today_rounded,
+                      'Expires: ${DateFormat('dd MMM yyyy').format(expiryDate)}'),
+
                 if (expiryDate != null && status != "Expired")
-                  _buildWaterInfoRow(Icons.timer_rounded, '${expiryDate.difference(DateTime.now()).inDays} days left'),
-                
+                  _buildWaterInfoRow(Icons.timer_rounded,
+                      '${expiryDate.difference(DateTime.now()).inDays} days left'),
+
                 const SizedBox(height: 12),
-                
+
                 // Renew Button
                 Container(
                   width: double.infinity,
@@ -783,7 +805,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 color: Colors.white.withOpacity(0.8),
                 fontFamily: 'SF Pro',
               ),
@@ -828,8 +850,10 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
     switch (_currentTabIndex) {
       case 0: // All
-        emptyMessage = _searchQuery.isEmpty ? 'No Subscriptions Found' : 'No Results Found';
-        emptySubMessage = _searchQuery.isEmpty 
+        emptyMessage = _searchQuery.isEmpty
+            ? 'No Subscriptions Found'
+            : 'No Results Found';
+        emptySubMessage = _searchQuery.isEmpty
             ? 'Add swimmers to see their subscriptions'
             : 'Try a different search term';
         break;
@@ -890,7 +914,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   void _showRenewDialog(QueryDocumentSnapshot swimmerDoc) {
     final data = swimmerDoc.data() as Map<String, dynamic>;
     final name = data['name'] ?? 'Unknown';
-    
+
     final List<String> plans = ["Monthly", "Quarterly", "Yearly"];
     String selectedPlan = "Monthly";
 
@@ -956,7 +980,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ],
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: StatefulBuilder(
@@ -977,14 +1000,18 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                             dropdownColor: const Color(0xFF004E92),
                             style: const TextStyle(color: Colors.white),
                             isExpanded: true,
-                            items: plans.map((p) => DropdownMenuItem(
-                              value: p,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(p),
-                              ),
-                            )).toList(),
-                            onChanged: (value) => setState(() => selectedPlan = value!),
+                            items: plans
+                                .map((p) => DropdownMenuItem(
+                                      value: p,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Text(p),
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => selectedPlan = value!),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -1008,7 +1035,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   },
                 ),
               ),
-              
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -1138,7 +1164,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ],
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -1165,7 +1190,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ],
                 ),
               ),
-              
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -1234,7 +1258,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
   void _showBulkSelectionDialog() {
     String selectedPlan = "Monthly";
-    
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -1297,7 +1321,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ],
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: StatefulBuilder(
@@ -1326,16 +1349,18 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                             dropdownColor: const Color(0xFF004E92),
                             style: const TextStyle(color: Colors.white),
                             isExpanded: true,
-                            items: ["Monthly", "Quarterly", "Yearly"].map((plan) => 
-                              DropdownMenuItem(
-                                value: plan, 
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(plan),
-                                ),
-                              )
-                            ).toList(),
-                            onChanged: (value) => setState(() => selectedPlan = value!),
+                            items: ["Monthly", "Quarterly", "Yearly"]
+                                .map((plan) => DropdownMenuItem(
+                                      value: plan,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Text(plan),
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => selectedPlan = value!),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -1359,7 +1384,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   },
                 ),
               ),
-              
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -1447,15 +1471,16 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     return DateFormat('dd MMM yyyy').format(newExpiry);
   }
 
-  Future<void> _renewSubscription(QueryDocumentSnapshot swimmerDoc, String plan) async {
+  Future<void> _renewSubscription(
+      QueryDocumentSnapshot swimmerDoc, String plan) async {
     try {
       final newExpiry = _calculateNewExpiryDate(plan);
       final expiryDate = DateFormat('dd MMM yyyy').parse(newExpiry);
-      
+
       await swimmerDoc.reference.update({
-        'subscriptionStatus': 'Active',
-        'subscriptionExpiry': Timestamp.fromDate(expiryDate),
-        'lastRenewalDate': Timestamp.now(),
+        AppFields.subscriptionStatus: AppStatuses.active,
+        AppFields.subscriptionExpiry: Timestamp.fromDate(expiryDate),
+        AppFields.lastRenewalDate: Timestamp.now(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1463,7 +1488,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           content: const Text("Subscription renewed successfully!"),
           backgroundColor: Colors.green[400],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     } catch (e) {
@@ -1472,7 +1498,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           content: Text("Error renewing subscription: $e"),
           backgroundColor: Colors.red[400],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -1480,22 +1507,23 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
   Future<void> _renewAllExpiringSubscriptions(String plan) async {
     try {
-      final swimmers = await _firestore.collection('swimmers').get();
+      final swimmers =
+          await _firestore.collection(AppCollections.swimmers).get();
       final newExpiry = _calculateNewExpiryDate(plan);
       final expiryDate = DateFormat('dd MMM yyyy').parse(newExpiry);
-      
+
       int renewedCount = 0;
 
       for (final swimmer in swimmers.docs) {
         final data = swimmer.data();
         final status = _getSubscriptionStatus(data);
-        
+
         // Renew all expired or expiring soon subscriptions
         if (status == "Expired" || status == "Expiring Soon") {
           await swimmer.reference.update({
-            'subscriptionStatus': 'Active',
-            'subscriptionExpiry': Timestamp.fromDate(expiryDate),
-            'lastRenewalDate': Timestamp.now(),
+            AppFields.subscriptionStatus: AppStatuses.active,
+            AppFields.subscriptionExpiry: Timestamp.fromDate(expiryDate),
+            AppFields.lastRenewalDate: Timestamp.now(),
           });
           renewedCount++;
         }
@@ -1506,7 +1534,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           content: Text("Successfully renewed $renewedCount subscriptions!"),
           backgroundColor: Colors.green[400],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     } catch (e) {
@@ -1515,7 +1544,8 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
           content: Text("Error in bulk renewal: $e"),
           backgroundColor: Colors.red[400],
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }

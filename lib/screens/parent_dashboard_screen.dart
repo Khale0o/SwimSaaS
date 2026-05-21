@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/screens/login_screen.dart';
 
 class ParentDashboardScreen extends StatefulWidget {
@@ -642,8 +643,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
       final user = _auth.currentUser;
       if (user != null) {
         final swimmerQuery = await _firestore
-            .collection('swimmers')
-            .where('email', isEqualTo: user.email)
+            .collection(AppCollections.swimmers)
+            .where(AppFields.email, isEqualTo: user.email)
             .limit(1)
             .get();
 
@@ -911,8 +912,8 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
       final user = _auth.currentUser;
       if (user != null) {
         final swimmerQuery = await _firestore
-            .collection('swimmers')
-            .where('email', isEqualTo: user.email)
+            .collection(AppCollections.swimmers)
+            .where(AppFields.email, isEqualTo: user.email)
             .limit(1)
             .get();
 
@@ -921,8 +922,8 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
           final swimmerName = _swimmerData!['name'];
 
           final querySnapshot = await _firestore
-              .collection('Evaluations')
-              .where('name', isEqualTo: swimmerName)
+              .collection(AppCollections.evaluations)
+              .where(AppFields.name, isEqualTo: swimmerName)
               .orderBy('date', descending: true)
               .get();
 
@@ -1216,8 +1217,8 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
       final user = _auth.currentUser;
       if (user != null) {
         final querySnapshot = await _firestore
-            .collection('swimmers')
-            .where('email', isEqualTo: user.email)
+            .collection(AppCollections.swimmers)
+            .where(AppFields.email, isEqualTo: user.email)
             .limit(1)
             .get();
 
@@ -1283,7 +1284,7 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
   }
 
   Widget _buildSubscriptionCard() {
-    final status = _swimmerData!['subscriptionStatus'] ?? 'Unknown';
+    final status = _swimmerData![AppFields.subscriptionStatus] ?? 'Unknown';
     final totalDays = _calculateTotalDays();
     final planType = _getPlanType(totalDays);
 
@@ -1507,8 +1508,8 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
           _buildDetailRow('Days Used', '${_calculateUsedDays()} days'),
           _buildDetailRow(
               'Days Remaining', '${_calculateRemainingDays()} days'),
-          _buildDetailRow(
-              'Status', _swimmerData!['subscriptionStatus'] ?? 'Unknown'),
+          _buildDetailRow('Status',
+              _swimmerData![AppFields.subscriptionStatus] ?? 'Unknown'),
         ],
       ),
     );
@@ -1636,8 +1637,9 @@ class ModernProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return FutureBuilder<QuerySnapshot>(
       future: FirebaseFirestore.instance
-          .collection('swimmers')
-          .where('email', isEqualTo: FirebaseAuth.instance.currentUser?.email)
+          .collection(AppCollections.swimmers)
+          .where(AppFields.email,
+              isEqualTo: FirebaseAuth.instance.currentUser?.email)
           .limit(1)
           .get(),
       builder: (context, snapshot) {
