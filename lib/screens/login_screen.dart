@@ -1,8 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/features/auth/data/auth_repository.dart';
+import 'package:swim/features/auth/data/user_repository.dart';
 import 'package:swim/screens/create_account_screen.dart';
 import 'package:swim/screens/forget_password_screen.dart';
 import 'package:swim/screens/home_screen.dart';
@@ -17,6 +18,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final AuthRepository _authRepository = AuthRepository();
+  final UserRepository _userRepository = UserRepository();
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -43,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted || _isNavigating) return;
 
     try {
-      User? user = FirebaseAuth.instance.currentUser;
+      final user = _authRepository.currentUser;
 
       if (user == null) {
         if (mounted) {
@@ -54,18 +57,17 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection(AppCollections.users)
-          .doc(user.uid)
-          .get()
-          .timeout(const Duration(seconds: 10));
+      final userProfile = await _userRepository.getUserProfileWithTimeout(
+        user.uid,
+        timeout: const Duration(seconds: 10),
+      );
 
       if (!mounted || _isNavigating) return;
 
-      if (userDoc.exists) {
-        String role = userDoc[AppFields.role] ?? AppRoles.parent;
-        bool isApproved = userDoc[AppFields.isApproved] ?? true;
-        bool isActive = userDoc[AppFields.isActive] ?? true;
+      if (userProfile != null) {
+        final role = userProfile.role;
+        final isApproved = userProfile.isApproved;
+        final isActive = userProfile.isActive;
 
         if (role == AppRoles.coach && !isApproved) {
           _showPendingApprovalDialog();
@@ -136,27 +138,26 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        await _authRepository.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
         if (!mounted) return;
 
-        User? user = FirebaseAuth.instance.currentUser;
+        final user = _authRepository.currentUser;
         if (user != null) {
-          DocumentSnapshot userDoc = await FirebaseFirestore.instance
-              .collection(AppCollections.users)
-              .doc(user.uid)
-              .get()
-              .timeout(const Duration(seconds: 10));
+          final userProfile = await _userRepository.getUserProfileWithTimeout(
+            user.uid,
+            timeout: const Duration(seconds: 10),
+          );
 
           if (!mounted) return;
 
-          if (userDoc.exists) {
-            String role = userDoc[AppFields.role] ?? AppRoles.parent;
-            bool isApproved = userDoc[AppFields.isApproved] ?? true;
-            bool isActive = userDoc[AppFields.isActive] ?? true;
+          if (userProfile != null) {
+            final role = userProfile.role;
+            final isApproved = userProfile.isApproved;
+            final isActive = userProfile.isActive;
 
             if (role == AppRoles.coach && !isApproved) {
               setState(() {
@@ -308,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signOut() async {
     try {
-      await FirebaseAuth.instance.signOut();
+      await _authRepository.signOut();
       if (mounted) {
         setState(() {
           _checkingAuth = false;

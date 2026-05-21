@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:swim/features/auth/data/auth_repository.dart';
 import 'login_screen.dart';
 
 class ForgetPasswordScreen extends StatefulWidget {
@@ -10,6 +11,7 @@ class ForgetPasswordScreen extends StatefulWidget {
 }
 
 class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
+  final AuthRepository _authRepository = AuthRepository();
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _isLoading = false;
@@ -23,8 +25,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
       try {
         // إرسال رابط إعادة تعيين كلمة المرور
-        await FirebaseAuth.instance.sendPasswordResetEmail(
-          email: _emailController.text.trim(),
+        await _authRepository.sendPasswordResetEmail(
+          _emailController.text.trim(),
         );
 
         if (mounted) {
