@@ -40,10 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _checkIfUserIsLoggedIn() async {
     if (!mounted || _isNavigating) return;
-    
+
     try {
       User? user = FirebaseAuth.instance.currentUser;
-      
+
       if (user == null) {
         if (mounted) {
           setState(() {
@@ -98,9 +98,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _navigateToDashboard(String role) {
     if (!mounted || _isNavigating) return;
-    
+
     _isNavigating = true;
-    
+
     Widget targetScreen;
     switch (role) {
       case 'coach':
@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!mounted) return;
-    
+
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (!mounted) return;
-        
+
         User? user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -180,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } on FirebaseAuthException catch (e) {
         if (!mounted) return;
-        
+
         setState(() {
           _isLoading = false;
         });
@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _showErrorSnackBar(message);
       } catch (e) {
         if (!mounted) return;
-        
+
         setState(() {
           _isLoading = false;
         });
@@ -220,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -233,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showPendingApprovalDialog() {
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -271,7 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showInactiveAccountDialog() {
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -321,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleBackButton() {
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -423,7 +423,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
-          
+
           // Content
           Center(
             child: Column(
@@ -523,11 +523,16 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
-          
+
           // Content
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                24 + MediaQuery.of(context).viewInsets.bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -537,9 +542,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
-                  
                   const SizedBox(height: 40),
-                  
                   _buildHeader(),
                   const SizedBox(height: 40),
                   _buildLoginForm(),
@@ -642,7 +645,8 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: InputDecoration(
         labelText: 'Email Address',
         labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-        prefixIcon: Icon(Icons.email_outlined, color: Colors.white.withOpacity(0.7)),
+        prefixIcon:
+            Icon(Icons.email_outlined, color: Colors.white.withOpacity(0.7)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
@@ -678,7 +682,8 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-        prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.7)),
+        prefixIcon:
+            Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.7)),
         suffixIcon: IconButton(
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -718,10 +723,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildRememberMeAndForgotPassword() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Theme(
               data: ThemeData(
@@ -849,8 +858,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildSocialLoginButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         IconButton(
           onPressed: () {
@@ -861,7 +871,8 @@ class _LoginScreenState extends State<LoginScreen> {
             height: 24,
             width: 24,
             errorBuilder: (context, error, stackTrace) {
-              return Icon(Icons.account_circle, color: Colors.white.withOpacity(0.7));
+              return Icon(Icons.account_circle,
+                  color: Colors.white.withOpacity(0.7));
             },
           ),
           style: IconButton.styleFrom(

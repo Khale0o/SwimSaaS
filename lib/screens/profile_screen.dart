@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import 'package:swim/screens/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -15,7 +14,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final _formKey = GlobalKey<FormState>();
-  
+
   User? _currentUser;
   Map<String, dynamic> _userData = {};
   bool _isEditing = false;
@@ -23,7 +22,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
 
   @override
@@ -40,10 +40,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     _currentUser = _auth.currentUser;
-    
+
     if (_currentUser != null) {
       try {
-        final userDoc = await _firestore.collection('users').doc(_currentUser!.uid).get();
+        final userDoc =
+            await _firestore.collection('users').doc(_currentUser!.uid).get();
         if (userDoc.exists) {
           if (mounted) {
             setState(() {
@@ -94,7 +95,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               content: const Text('Profile updated successfully!'),
               backgroundColor: Colors.green[400],
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -105,7 +107,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               content: Text('Error updating profile: $e'),
               backgroundColor: Colors.red[400],
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -120,14 +123,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _changePassword() async {
-    if (_currentPasswordController.text.isEmpty || _newPasswordController.text.isEmpty) {
+    if (_currentPasswordController.text.isEmpty ||
+        _newPasswordController.text.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Please fill all password fields'),
             backgroundColor: Colors.orange[400],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -141,7 +146,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: const Text('New password must be at least 6 characters'),
             backgroundColor: Colors.orange[400],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -172,7 +178,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: const Text('Password changed successfully!'),
             backgroundColor: Colors.green[400],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -183,14 +190,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else if (e.code == 'weak-password') {
         errorMessage = 'New password is too weak';
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red[400],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -201,7 +209,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: Text('Error: $e'),
             backgroundColor: Colors.red[400],
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -277,7 +286,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -301,7 +309,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -348,7 +355,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             await _auth.signOut();
                             if (mounted) {
                               Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) => const LoginScreen()),
                                 (route) => false,
                               );
                             }
@@ -437,7 +445,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -457,9 +464,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'Current Password',
-                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                          labelStyle:
+                              TextStyle(color: Colors.white.withOpacity(0.7)),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                         ),
                       ),
                     ),
@@ -478,16 +487,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: 'New Password',
-                          labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                          labelStyle:
+                              TextStyle(color: Colors.white.withOpacity(0.7)),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -579,30 +589,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Stack(
         children: [
           _buildWaveBackground(),
-          
           SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               children: [
                 const SizedBox(height: 60),
-                
                 _buildWaterWelcomeSection(),
-                
                 const SizedBox(height: 24),
-                
                 _buildProfileHeader(),
                 const SizedBox(height: 30),
-
                 _buildProfileForm(),
-
                 const SizedBox(height: 16),
-
                 _buildChangePasswordSection(),
-
                 const SizedBox(height: 24),
-
                 _buildLogoutButton(),
-
                 const SizedBox(height: 100),
               ],
             ),
@@ -874,7 +874,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
               _buildWaterFormField(
                 controller: _fullNameController,
                 label: 'Full Name',
@@ -882,7 +881,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 enabled: _isEditing,
               ),
               const SizedBox(height: 16),
-
               _buildWaterFormField(
                 controller: _phoneController,
                 label: 'Phone Number',
@@ -891,7 +889,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
-
               _buildWaterFormField(
                 controller: TextEditingController(text: _currentUser?.email),
                 label: 'Email',
@@ -899,7 +896,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 enabled: false,
               ),
               const SizedBox(height: 20),
-
               if (_isEditing)
                 Container(
                   width: double.infinity,
@@ -953,7 +949,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
           prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );

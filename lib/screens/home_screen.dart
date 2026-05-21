@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import 'package:swim/screens/login_screen.dart';
 import 'dashboard_screen.dart';
 import 'evaluation_screen.dart';
@@ -40,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .collection('users')
           .doc(_auth.currentUser?.uid)
           .get();
-      
+
       if (userDoc.exists) {
         setState(() {
           _isAdmin = userDoc['isAdmin'] ?? false;
@@ -90,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Wave Background
           _buildWaveBackground(),
-          
+
           // Main Content - مع padding علشان متتداخلش مع النافجيشن
           Padding(
             padding: const EdgeInsets.only(bottom: 100), // مساحة للنافجيشن بار
@@ -98,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Modern Header - يظهر فقط في الداشبورد
                 if (_currentIndex == 0) _buildModernHeader(),
-                
+
                 // Page Content
                 Expanded(
                   child: PageView(
@@ -113,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          
+
           // Floating Navigation Bar - في الأسفل تماماً
           Positioned(
             bottom: 20,
@@ -254,7 +253,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         value: 'admin_panel',
                         child: Row(
                           children: [
-                            Icon(Icons.admin_panel_settings, size: 20, color: Colors.green),
+                            Icon(Icons.admin_panel_settings,
+                                size: 20, color: Colors.green),
                             SizedBox(width: 8),
                             Text('Admin Panel'),
                           ],
@@ -282,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Page Indicators
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -292,8 +292,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: _currentIndex == index ? 20 : 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _currentIndex == index 
-                      ? const Color(0xFF42A5F5) 
+                  color: _currentIndex == index
+                      ? const Color(0xFF42A5F5)
                       : Colors.white.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     bool isActive = _currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () {
         _pageController.animateToPage(
@@ -377,7 +377,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: isActive ? const Color(0xFF42A5F5) : Colors.white.withOpacity(0.6),
+              color: isActive
+                  ? const Color(0xFF42A5F5)
+                  : Colors.white.withOpacity(0.6),
               fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
               fontFamily: 'SF Pro',
             ),
@@ -401,7 +403,8 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: const Color(0xFF1E2A3A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -469,16 +472,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showChangePasswordDialog(BuildContext context) {
-    final TextEditingController currentPasswordController = TextEditingController();
+    final TextEditingController currentPasswordController =
+        TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
-    final TextEditingController confirmPasswordController = TextEditingController();
+    final TextEditingController confirmPasswordController =
+        TextEditingController();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: const Color(0xFF1E2A3A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -597,25 +603,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-Future<void> _logout(BuildContext context) async {
-  try {
-    await FirebaseAuth.instance.signOut();
-    
-    // استخدام Navigator.pushReplacement لتوجيه إلى شاشة اللوجين
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-      (Route<dynamic> route) => false, // هذا يزيل كل الشاشات من الـ stack
-    );
-    
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Logout failed: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+
+      // استخدام Navigator.pushReplacement لتوجيه إلى شاشة اللوجين
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (Route<dynamic> route) => false, // هذا يزيل كل الشاشات من الـ stack
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
-}
 
   Future<void> _changePassword(
     BuildContext context,
@@ -633,7 +638,8 @@ Future<void> _logout(BuildContext context) async {
 
       if (newPassword.length < 6) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password must be at least 6 characters')),
+          const SnackBar(
+              content: Text('Password must be at least 6 characters')),
         );
         return;
       }
@@ -644,10 +650,10 @@ Future<void> _logout(BuildContext context) async {
           email: user.email!,
           password: currentPassword,
         );
-        
+
         await user.reauthenticateWithCredential(credential);
         await user.updatePassword(newPassword);
-        
+
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password changed successfully')),

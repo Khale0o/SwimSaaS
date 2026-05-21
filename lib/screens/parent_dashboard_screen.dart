@@ -30,13 +30,13 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
         children: [
           // Wave Background
           _buildWaveBackground(),
-          
+
           // Main Content
           Column(
             children: [
               // Modern Header with Menu
               _buildModernHeader(),
-              
+
               // Page Content
               Expanded(
                 child: PageView(
@@ -50,7 +50,7 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
               ),
             ],
           ),
-          
+
           // Floating Navigation Bar
           Positioned(
             bottom: 20,
@@ -64,54 +64,54 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
   }
 
   Widget _buildWaveBackground() {
-  return Container(
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF004E92), Color(0xFF000428)],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF004E92), Color(0xFF000428)],
+        ),
       ),
-    ),
-    child: Stack(
-      children: [
-        Positioned(
-          top: -100,
-          left: -100,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0xFF42A5F5).withOpacity(0.1),
-                  Colors.transparent,
-                ],
+      child: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF42A5F5).withOpacity(0.1),
+                    Colors.transparent,
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          top: 150,
-          right: -50,
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0xFF64B5F6).withOpacity(0.1),
-                  Colors.transparent,
-                ],
+          Positioned(
+            top: 150,
+            right: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF64B5F6).withOpacity(0.1),
+                    Colors.transparent,
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildModernHeader() {
     return Container(
@@ -192,7 +192,7 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          
+
           // Page Indicators
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -202,8 +202,8 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
                 width: _currentIndex == index ? 20 : 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _currentIndex == index 
-                      ? const Color(0xFF42A5F5) 
+                  color: _currentIndex == index
+                      ? const Color(0xFF42A5F5)
                       : Colors.white.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -244,7 +244,7 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     bool isActive = _currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () {
         _pageController.animateToPage(
@@ -286,7 +286,9 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: isActive ? const Color(0xFF42A5F5) : Colors.white.withOpacity(0.6),
+              color: isActive
+                  ? const Color(0xFF42A5F5)
+                  : Colors.white.withOpacity(0.6),
               fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
@@ -295,106 +297,108 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
     );
   }
 
-void _showLogoutDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        backgroundColor: const Color(0xFF1E2A3A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.logout, size: 50, color: Colors.red),
-              const SizedBox(height: 16),
-              const Text(
-                'Logout',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF1E2A3A),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.logout, size: 50, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Are you sure you want to logout?',
-                style: TextStyle(color: Colors.white70),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white24),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 8),
+                const Text(
+                  'Are you sure you want to logout?',
+                  style: TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: const Text('Cancel'),
                       ),
-                      child: const Text('Cancel'),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        Navigator.pop(context); // Close dialog
-                        await _simpleLogout(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context); // Close dialog
+                          await _simpleLogout(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: const Text('Logout'),
                       ),
-                      child: const Text('Logout'),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    },
-  );
-}
-
-Future<void> _simpleLogout(BuildContext context) async {
-  try {
-    print('🔄 Starting logout...');
-    
-    // 1. Firebase logout
-    await FirebaseAuth.instance.signOut();
-    print('✅ Firebase signed out');
-    
-    // 2. أبسط طريقة - أعمل create لشاشة اللوجين مباشرة
-    _goToLoginScreen(context);
-    
-  } catch (e) {
-    print('❌ Logout error: $e');
-    // حتى لو في error روح للوجين
-    _goToLoginScreen(context);
+        );
+      },
+    );
   }
-}
 
-void _goToLoginScreen(BuildContext context) {
-  // إعمل import لشاشة اللوجين بتاعتك هنا
-  // import 'login_screen.dart';
-  
-  Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(builder: (context) => LoginScreen()), // غير LoginScreen لاسم شاشة اللوجين بتاعتك
-    (route) => false,
-  );
-}
+  Future<void> _simpleLogout(BuildContext context) async {
+    try {
+      print('🔄 Starting logout...');
+
+      // 1. Firebase logout
+      await FirebaseAuth.instance.signOut();
+      print('✅ Firebase signed out');
+
+      // 2. أبسط طريقة - أعمل create لشاشة اللوجين مباشرة
+      _goToLoginScreen(context);
+    } catch (e) {
+      print('❌ Logout error: $e');
+      // حتى لو في error روح للوجين
+      _goToLoginScreen(context);
+    }
+  }
+
+  void _goToLoginScreen(BuildContext context) {
+    // إعمل import لشاشة اللوجين بتاعتك هنا
+    // import 'login_screen.dart';
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+          builder: (context) =>
+              const LoginScreen()), // غير LoginScreen لاسم شاشة اللوجين بتاعتك
+      (route) => false,
+    );
+  }
 
   void _showChangePasswordDialog(BuildContext context) {
     final TextEditingController currentController = TextEditingController();
@@ -406,7 +410,8 @@ void _goToLoginScreen(BuildContext context) {
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: const Color(0xFF1E2A3A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -528,8 +533,10 @@ void _goToLoginScreen(BuildContext context) {
   Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-      // Navigate to login screen
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -573,10 +580,10 @@ void _goToLoginScreen(BuildContext context) {
           email: user.email!,
           password: currentPassword,
         );
-        
+
         await user.reauthenticateWithCredential(credential);
         await user.updatePassword(newPassword);
-        
+
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -673,7 +680,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
   @override
   Widget build(BuildContext context) {
     final attendanceRecords = _getAttendanceRecords();
-    
+
     return _isLoading
         ? const Center(
             child: CircularProgressIndicator(
@@ -688,7 +695,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
                 // Stats Overview
                 _buildStatsOverview(attendanceRecords),
                 const SizedBox(height: 20),
-                
+
                 // Recent Sessions
                 Expanded(
                   child: _buildAttendanceList(attendanceRecords),
@@ -701,7 +708,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
   Widget _buildStatsOverview(List<Map<String, dynamic>> records) {
     final presentCount = records.where((r) => r['present']).length;
     final totalCount = records.length;
-    final attendanceRate = totalCount > 0 ? (presentCount / totalCount * 100) : 0;
+    final attendanceRate =
+        totalCount > 0 ? (presentCount / totalCount * 100) : 0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -713,9 +721,11 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('${records.length}', 'Total Sessions', Icons.calendar_today),
+          _buildStatItem(
+              '${records.length}', 'Total Sessions', Icons.calendar_today),
           _buildStatItem('$presentCount', 'Present', Icons.check_circle),
-          _buildStatItem('${attendanceRate.toStringAsFixed(0)}%', 'Rate', Icons.trending_up),
+          _buildStatItem('${attendanceRate.toStringAsFixed(0)}%', 'Rate',
+              Icons.trending_up),
         ],
       ),
     );
@@ -758,7 +768,8 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_today, size: 64, color: Colors.white.withOpacity(0.3)),
+            Icon(Icons.calendar_today,
+                size: 64, color: Colors.white.withOpacity(0.3)),
             const SizedBox(height: 16),
             Text(
               'No attendance records',
@@ -785,7 +796,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
 
   Widget _buildAttendanceCard(Map<String, dynamic> record) {
     final isPresent = record['present'];
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -800,14 +811,15 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: isPresent 
+              color: isPresent
                   ? const Color(0xFF4CAF50).withOpacity(0.2)
                   : const Color(0xFFF44336).withOpacity(0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isPresent ? Icons.check : Icons.close,
-              color: isPresent ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
+              color:
+                  isPresent ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
             ),
           ),
           const SizedBox(width: 16),
@@ -837,18 +849,22 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: isPresent 
+              color: isPresent
                   ? const Color(0xFF4CAF50).withOpacity(0.2)
                   : const Color(0xFFF44336).withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isPresent ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
+                color: isPresent
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFF44336),
               ),
             ),
             child: Text(
               isPresent ? 'PRESENT' : 'ABSENT',
               style: TextStyle(
-                color: isPresent ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
+                color: isPresent
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFF44336),
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -903,7 +919,7 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
         if (swimmerQuery.docs.isNotEmpty) {
           _swimmerData = swimmerQuery.docs.first.data();
           final swimmerName = _swimmerData!['name'];
-          
+
           final querySnapshot = await _firestore
               .collection('Evaluations')
               .where('name', isEqualTo: swimmerName)
@@ -957,7 +973,7 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
                 // Performance Overview
                 _buildPerformanceOverview(),
                 const SizedBox(height: 20),
-                
+
                 // Evaluations List
                 Expanded(
                   child: _buildEvaluationsList(),
@@ -969,7 +985,10 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
 
   Widget _buildPerformanceOverview() {
     final averageScore = _evaluations.isNotEmpty
-        ? _evaluations.map((e) => (e['score'] as int? ?? 0)).reduce((a, b) => a + b) / _evaluations.length
+        ? _evaluations
+                .map((e) => (e['score'] as int? ?? 0))
+                .reduce((a, b) => a + b) /
+            _evaluations.length
         : 0;
     final passedCount = _evaluations.where((e) => e['passed'] == 'Yes').length;
 
@@ -983,8 +1002,10 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildPerformanceItem('${_evaluations.length}', 'Total Tests', Icons.assessment),
-          _buildPerformanceItem(averageScore.toStringAsFixed(1), 'Avg Score', Icons.star),
+          _buildPerformanceItem(
+              '${_evaluations.length}', 'Total Tests', Icons.assessment),
+          _buildPerformanceItem(
+              averageScore.toStringAsFixed(1), 'Avg Score', Icons.star),
           _buildPerformanceItem('$passedCount', 'Passed', Icons.emoji_events),
         ],
       ),
@@ -1028,7 +1049,8 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assessment, size: 64, color: Colors.white.withOpacity(0.3)),
+            Icon(Icons.assessment,
+                size: 64, color: Colors.white.withOpacity(0.3)),
             const SizedBox(height: 16),
             Text(
               'No evaluations yet',
@@ -1084,20 +1106,25 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: passed 
+                  color: passed
                       ? const Color(0xFF4CAF50).withOpacity(0.2)
                       : const Color(0xFFF44336).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: passed ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
+                    color: passed
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFF44336),
                   ),
                 ),
                 child: Text(
                   passed ? 'PASSED' : 'FAILED',
                   style: TextStyle(
-                    color: passed ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
+                    color: passed
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFF44336),
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1239,15 +1266,15 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
                 // Subscription Card
                 _buildSubscriptionCard(),
                 const SizedBox(height: 20),
-                
+
                 // Progress Card
                 _buildProgressCard(),
                 const SizedBox(height: 20),
-                
+
                 // Training Info
                 _buildTrainingInfoCard(),
                 const SizedBox(height: 20),
-                
+
                 // Subscription Details
                 _buildSubscriptionDetailsCard(),
               ],
@@ -1259,7 +1286,7 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
     final status = _swimmerData!['subscriptionStatus'] ?? 'Unknown';
     final totalDays = _calculateTotalDays();
     final planType = _getPlanType(totalDays);
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1302,7 +1329,8 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -1341,7 +1369,7 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
     final progress = _calculateProgress();
     final remainingDays = _calculateRemainingDays();
     final usedDays = _calculateUsedDays();
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1361,7 +1389,7 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Progress Bar
           Stack(
             children: [
@@ -1440,8 +1468,10 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
           ),
           const SizedBox(height: 16),
           _buildInfoRow('Level', _swimmerData!['level'] ?? 'Not set'),
-          _buildInfoRow('Training Days', _swimmerData!['trainingDays'] ?? 'Not set'),
-          _buildInfoRow('Training Time', _swimmerData!['trainingTime'] ?? 'Not set'),
+          _buildInfoRow(
+              'Training Days', _swimmerData!['trainingDays'] ?? 'Not set'),
+          _buildInfoRow(
+              'Training Time', _swimmerData!['trainingTime'] ?? 'Not set'),
           _buildInfoRow('Join Date', _formatDate(_swimmerData!['joinDate'])),
         ],
       ),
@@ -1469,12 +1499,16 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
           ),
           const SizedBox(height: 16),
           _buildDetailRow('Plan Type', _getPlanType(_calculateTotalDays())),
-          _buildDetailRow('Start Date', _formatDate(_swimmerData!['lastRenewalDate'])),
-          _buildDetailRow('Expiry Date', _formatDate(_swimmerData!['subscriptionExpiry'])),
+          _buildDetailRow(
+              'Start Date', _formatDate(_swimmerData!['lastRenewalDate'])),
+          _buildDetailRow(
+              'Expiry Date', _formatDate(_swimmerData!['subscriptionExpiry'])),
           _buildDetailRow('Total Duration', '${_calculateTotalDays()} days'),
           _buildDetailRow('Days Used', '${_calculateUsedDays()} days'),
-          _buildDetailRow('Days Remaining', '${_calculateRemainingDays()} days'),
-          _buildDetailRow('Status', _swimmerData!['subscriptionStatus'] ?? 'Unknown'),
+          _buildDetailRow(
+              'Days Remaining', '${_calculateRemainingDays()} days'),
+          _buildDetailRow(
+              'Status', _swimmerData!['subscriptionStatus'] ?? 'Unknown'),
         ],
       ),
     );
@@ -1534,16 +1568,19 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
 
   IconData _getStatusIcon(String status) {
     switch (status.toLowerCase()) {
-      case 'active': return Icons.check_circle;
-      case 'expired': return Icons.cancel;
-      default: return Icons.help;
+      case 'active':
+        return Icons.check_circle;
+      case 'expired':
+        return Icons.cancel;
+      default:
+        return Icons.help;
     }
   }
 
   double _calculateProgress() {
     final start = _swimmerData!['lastRenewalDate'];
     final expiry = _swimmerData!['subscriptionExpiry'];
-    
+
     if (start is Timestamp && expiry is Timestamp) {
       final totalDays = expiry.toDate().difference(start.toDate()).inDays;
       final passedDays = DateTime.now().difference(start.toDate()).inDays;
@@ -1557,7 +1594,7 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
   int _calculateTotalDays() {
     final start = _swimmerData!['lastRenewalDate'];
     final expiry = _swimmerData!['subscriptionExpiry'];
-    
+
     if (start is Timestamp && expiry is Timestamp) {
       return expiry.toDate().difference(start.toDate()).inDays;
     }
@@ -1611,7 +1648,7 @@ class ModernProfilePage extends StatelessWidget {
             ),
           );
         }
-        
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Text(
@@ -1622,9 +1659,9 @@ class ModernProfilePage extends StatelessWidget {
             ),
           );
         }
-        
+
         final data = snapshot.data!.docs.first.data() as Map<String, dynamic>;
-        
+
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: ListView(
@@ -1634,20 +1671,25 @@ class ModernProfilePage extends StatelessWidget {
               // Profile Header
               _buildProfileHeader(data),
               const SizedBox(height: 20),
-              
+
               // Personal Information
               _buildInfoCard('Personal Information', [
-                _buildInfoItem(Icons.email, 'Email', data['email'] ?? 'Not set'),
-                _buildInfoItem(Icons.phone, 'Phone', data['phone'] ?? 'Not set'),
-                _buildInfoItem(Icons.calendar_today, 'Join Date', _formatDate(data['joinDate'])),
+                _buildInfoItem(
+                    Icons.email, 'Email', data['email'] ?? 'Not set'),
+                _buildInfoItem(
+                    Icons.phone, 'Phone', data['phone'] ?? 'Not set'),
+                _buildInfoItem(Icons.calendar_today, 'Join Date',
+                    _formatDate(data['joinDate'])),
               ]),
               const SizedBox(height: 16),
-              
+
               // Swimming Details
               _buildInfoCard('Swimming Details', [
                 _buildInfoItem(Icons.pool, 'Level', data['level'] ?? 'Not set'),
-                _buildInfoItem(Icons.schedule, 'Training Days', data['trainingDays'] ?? 'Not set'),
-                _buildInfoItem(Icons.access_time, 'Training Time', data['trainingTime'] ?? 'Not set'),
+                _buildInfoItem(Icons.schedule, 'Training Days',
+                    data['trainingDays'] ?? 'Not set'),
+                _buildInfoItem(Icons.access_time, 'Training Time',
+                    data['trainingTime'] ?? 'Not set'),
               ]),
             ],
           ),
@@ -1711,7 +1753,8 @@ class ModernProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF42A5F5).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),

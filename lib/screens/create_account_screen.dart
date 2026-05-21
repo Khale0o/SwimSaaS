@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:swim/screens/home_screen.dart';
 import 'login_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
@@ -18,7 +17,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   String _selectedRole = 'parent'; // 'coach', 'parent'
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -36,7 +35,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     {
       'value': 'coach',
       'title': 'Coach',
-      'subtitle': 'Manage swimmers and training programs - Requires admin approval',
+      'subtitle':
+          'Manage swimmers and training programs - Requires admin approval',
       'icon': Icons.sports,
       'requiresApproval': true,
     },
@@ -58,8 +58,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
       try {
         // 1️⃣ إنشاء الحساب في Firebase Auth
-        final credential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -91,7 +91,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           if (_selectedRole == 'coach') {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Coach account created! Waiting for admin approval.'),
+                content:
+                    Text('Coach account created! Waiting for admin approval.'),
                 backgroundColor: Colors.orange,
                 duration: Duration(seconds: 5),
               ),
@@ -194,11 +195,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ],
             ),
           ),
-          
+
           // Content
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                24 + MediaQuery.of(context).viewInsets.bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -209,9 +215,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Header
                   Center(
                     child: Column(
@@ -257,7 +263,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 30),
 
                   // Role Selection
@@ -270,7 +276,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Role Cards
                   Column(
                     children: _roles.map((role) {
@@ -286,12 +292,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isSelected 
+                            color: isSelected
                                 ? Colors.white.withOpacity(0.2)
                                 : Colors.white.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected 
+                              color: isSelected
                                   ? Colors.white
                                   : Colors.white.withOpacity(0.3),
                               width: isSelected ? 2 : 1,
@@ -302,14 +308,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: isSelected 
+                                  color: isSelected
                                       ? Colors.white
                                       : Colors.white.withOpacity(0.5),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   role['icon'] as IconData,
-                                  color: isSelected ? Color(0xFF42A5F5) : Colors.white,
+                                  color: isSelected
+                                      ? Color(0xFF42A5F5)
+                                      : Colors.white,
                                   size: 20,
                                 ),
                               ),
@@ -349,7 +357,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   ),
 
                   const SizedBox(height: 30),
-                  
+
                   // Registration Form
                   Container(
                     decoration: BoxDecoration(
@@ -370,19 +378,24 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Full Name',
-                              labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                              prefixIcon: Icon(Icons.person_outline, color: Colors.white.withOpacity(0.7)),
+                              labelStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.7)),
+                              prefixIcon: Icon(Icons.person_outline,
+                                  color: Colors.white.withOpacity(0.7)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.white),
+                                borderSide:
+                                    const BorderSide(color: Colors.white),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.1),
@@ -394,9 +407,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Email Field
                           TextFormField(
                             controller: _emailController,
@@ -404,19 +417,24 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Email Address',
-                              labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                              prefixIcon: Icon(Icons.email_outlined, color: Colors.white.withOpacity(0.7)),
+                              labelStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.7)),
+                              prefixIcon: Icon(Icons.email_outlined,
+                                  color: Colors.white.withOpacity(0.7)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.white),
+                                borderSide:
+                                    const BorderSide(color: Colors.white),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.1),
@@ -431,9 +449,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Phone Field
                           TextFormField(
                             controller: _phoneController,
@@ -441,19 +459,24 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Phone Number',
-                              labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                              prefixIcon: Icon(Icons.phone_outlined, color: Colors.white.withOpacity(0.7)),
+                              labelStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.7)),
+                              prefixIcon: Icon(Icons.phone_outlined,
+                                  color: Colors.white.withOpacity(0.7)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.white),
+                                borderSide:
+                                    const BorderSide(color: Colors.white),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.1),
@@ -465,9 +488,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Password Field
                           TextFormField(
                             controller: _passwordController,
@@ -475,11 +498,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                              prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.7)),
+                              labelStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.7)),
+                              prefixIcon: Icon(Icons.lock_outline,
+                                  color: Colors.white.withOpacity(0.7)),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                   color: Colors.white.withOpacity(0.7),
                                 ),
                                 onPressed: () {
@@ -490,15 +517,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.white),
+                                borderSide:
+                                    const BorderSide(color: Colors.white),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.1),
@@ -513,9 +543,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Confirm Password Field
                           TextFormField(
                             controller: _confirmPasswordController,
@@ -523,30 +553,38 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
                               labelText: 'Confirm Password',
-                              labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                              prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withOpacity(0.7)),
+                              labelStyle: TextStyle(
+                                  color: Colors.white.withOpacity(0.7)),
+                              prefixIcon: Icon(Icons.lock_outline,
+                                  color: Colors.white.withOpacity(0.7)),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                   color: Colors.white.withOpacity(0.7),
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
                                   });
                                 },
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.white),
+                                borderSide:
+                                    const BorderSide(color: Colors.white),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.3)),
                               ),
                               filled: true,
                               fillColor: Colors.white.withOpacity(0.1),
@@ -558,15 +596,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Terms and Conditions
                           Row(
                             children: [
                               Theme(
                                 data: ThemeData(
-                                  unselectedWidgetColor: Colors.white.withOpacity(0.7),
+                                  unselectedWidgetColor:
+                                      Colors.white.withOpacity(0.7),
                                 ),
                                 child: Checkbox(
                                   value: _agreeToTerms,
@@ -595,15 +634,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                               ),
                             ],
                           ),
-                          
+
                           const SizedBox(height: 30),
-                          
+
                           // Create Account Button
                           SizedBox(
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
-                              onPressed: _agreeToTerms && !_isLoading ? _createAccount : null,
+                              onPressed: _agreeToTerms && !_isLoading
+                                  ? _createAccount
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
@@ -617,7 +658,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF42A5F5)),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Color(0xFF42A5F5)),
                                       ),
                                     )
                                   : const Text(
@@ -630,16 +673,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                     ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 30),
-                          
+
                           // Login Link
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
                                 'Already have an account? ',
-                                style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                                style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8)),
                               ),
                               GestureDetector(
                                 onTap: () {

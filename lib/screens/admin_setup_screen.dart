@@ -1,7 +1,8 @@
-// admin_setup_screen.dart
+// Development-only utility. Do not add this screen to normal production
+// navigation; privileged role changes must be protected by Firestore rules or
+// trusted backend logic before release.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class AdminSetupScreen extends StatefulWidget {
   const AdminSetupScreen({super.key});
@@ -28,7 +29,7 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
           .collection('users')
           .where('email', isEqualTo: _emailController.text.trim())
           .get();
-      
+
       if (query.docs.isNotEmpty) {
         await query.docs.first.reference.update({
           'isAdmin': true,
@@ -36,7 +37,7 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
           'isActive': true,
           'needsApproval': false,
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('User is now admin!'),
@@ -73,34 +74,59 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
         title: const Text('Admin Setup'),
         backgroundColor: Colors.red,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Text(
-              'Make User Admin',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'User Email',
-                border: OutlineInputBorder(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            20 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.08),
+                  border: Border.all(color: Colors.red),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Development-only admin setup. Do not expose this screen in normal production navigation.',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _makeUserAdmin,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                minimumSize: const Size(double.infinity, 50),
+              const SizedBox(height: 20),
+              const Text(
+                'Make User Admin',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Make Admin'),
-            ),
-          ],
+              const SizedBox(height: 20),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'User Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _makeUserAdmin,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Make Admin'),
+              ),
+            ],
+          ),
         ),
       ),
     );
