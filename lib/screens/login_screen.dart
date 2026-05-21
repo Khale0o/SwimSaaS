@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _navigateToDashboard(AppRoles.parent);
       }
     } catch (e) {
-      print('Error checking user: $e');
+      debugPrint('Error checking user: $e');
       if (mounted) {
         setState(() {
           _checkingAuth = false;
@@ -311,7 +311,7 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     } catch (e) {
-      print('Error signing out: $e');
+      debugPrint('Error signing out: $e');
     }
   }
 
@@ -740,7 +740,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   });
                 },
                 activeColor: Colors.white,
-                checkColor: Color(0xFF42A5F5),
+                checkColor: const Color(0xFF42A5F5),
               ),
             ),
             Text(
@@ -758,7 +758,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           },
-          child: Text(
+          child: const Text(
             'Forgot Password?',
             style: TextStyle(
               color: Colors.white,

@@ -36,6 +36,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           });
         }
       } on FirebaseAuthException catch (e) {
+        if (!mounted) return;
+
         setState(() {
           _isLoading = false;
         });
@@ -55,17 +57,15 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
             errorMessage = 'An error occurred. Please try again.';
         }
 
-        if (mounted) {
-          _showErrorDialog(errorMessage);
-        }
+        _showErrorDialog(errorMessage);
       } catch (e) {
+        if (!mounted) return;
+
         setState(() {
           _isLoading = false;
         });
 
-        if (mounted) {
-          _showErrorDialog('An unexpected error occurred. Please try again.');
-        }
+        _showErrorDialog('An unexpected error occurred. Please try again.');
       }
     }
   }
@@ -408,7 +408,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                                 ),
                                 side: const BorderSide(color: Colors.white),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'Resend Email',
                                 style: TextStyle(
                                   fontSize: 18,
