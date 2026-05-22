@@ -11,38 +11,22 @@ class EvaluationScreen extends StatefulWidget {
 }
 
 class _EvaluationListPageState extends State<EvaluationScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _searchController = TextEditingController();
+  late final Stream<QuerySnapshot> _swimmersStream;
+  late final Stream<QuerySnapshot> _evaluationsStream;
   String _searchQuery = '';
   bool _showEvaluatedSwimmers = false;
 
-  Stream<List<QueryDocumentSnapshot>> _getSwimmersWithoutEvaluation() {
-    return FirebaseFirestore.instance
-        .collection(AppCollections.swimmers)
-        .snapshots()
-        .asyncMap((swimmersSnapshot) async {
-      final swimmers = swimmersSnapshot.docs;
-
-      final evaluationsSnapshot = await FirebaseFirestore.instance
-          .collection(AppCollections.evaluations)
-          .get();
-
-      final evaluatedSwimmerNames = evaluationsSnapshot.docs
-          .map((doc) => doc['name']?.toString().toLowerCase() ?? '')
-          .toSet();
-
-      return swimmers.where((swimmer) {
-        final swimmerName = swimmer['name']?.toString().toLowerCase() ?? '';
-        return !evaluatedSwimmerNames.contains(swimmerName);
-      }).toList();
-    });
-  }
-
-  Stream<List<QueryDocumentSnapshot>> _getEvaluatedSwimmers() {
-    return FirebaseFirestore.instance
+  @override
+  void initState() {
+    super.initState();
+    _swimmersStream =
+        _firestore.collection(AppCollections.swimmers).snapshots();
+    _evaluationsStream = _firestore
         .collection(AppCollections.evaluations)
         .orderBy('date', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs);
+        .snapshots();
   }
 
   @override
@@ -97,7 +81,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                             fontFamily: 'SF Pro',
                           ),
                         ),
-                        Container(
+                        SizedBox(
                           height: 30,
                           child: FittedBox(
                             fit: BoxFit.contain,
@@ -364,53 +348,64 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
   }
 
   Widget _buildNonEvaluatedSwimmersList() {
-    return StreamBuilder<List<QueryDocumentSnapshot>>(
-      stream: _getSwimmersWithoutEvaluation(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _evaluationsStream,
+      builder: (context, evaluationsSnapshot) {
+        if (evaluationsSnapshot.hasError) {
           return _buildErrorWidget('❌ Error loading data');
         }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (evaluationsSnapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingWidget();
         }
 
-        final swimmers = snapshot.data!;
+        return StreamBuilder<QuerySnapshot>(
+          stream: _swimmersStream,
+          builder: (context, swimmersSnapshot) {
+            if (swimmersSnapshot.hasError) {
+              return _buildErrorWidget('❌ Error loading data');
+            }
 
-        final filteredSwimmers = swimmers.where((swimmer) {
-          final name = swimmer['name']?.toString().toLowerCase() ?? '';
-          return name.contains(_searchQuery);
-        }).toList();
+            if (swimmersSnapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoadingWidget();
+            }
 
-        if (filteredSwimmers.isEmpty) {
-          return _buildEmptyState(
-            icon: Icons.people_outline,
-            message: _searchQuery.isEmpty
-                ? 'All swimmers have evaluations!'
-                : 'No swimmers found for "$_searchQuery"',
-          );
-        }
+            final swimmers = _getSwimmersWithoutEvaluation(
+              swimmersSnapshot.data!.docs,
+              evaluationsSnapshot.data!.docs,
+            );
 
-        // استخدام Column بدل ListView.builder علشان مايحصلش double scroll
-        return Column(
-          children: [
-            ...filteredSwimmers
-                .map((swimmer) => Padding(
+            final filteredSwimmers = _filterByName(swimmers);
+
+            if (filteredSwimmers.isEmpty) {
+              return _buildEmptyState(
+                icon: Icons.people_outline,
+                message: _searchQuery.isEmpty
+                    ? 'All swimmers have evaluations!'
+                    : 'No swimmers found for "$_searchQuery"',
+              );
+            }
+
+            // استخدام Column بدل ListView.builder علشان مايحصلش double scroll
+            return Column(
+              children: [
+                ...filteredSwimmers.map((swimmer) => Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       child: _buildWaterSwimmerCard(context, swimmer),
-                    ))
-                .toList(),
-            const SizedBox(height: 20),
-          ],
+                    )),
+                const SizedBox(height: 20),
+              ],
+            );
+          },
         );
       },
     );
   }
 
   Widget _buildEvaluatedSwimmersList() {
-    return StreamBuilder<List<QueryDocumentSnapshot>>(
-      stream: _getEvaluatedSwimmers(),
+    return StreamBuilder<QuerySnapshot>(
+      stream: _evaluationsStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _buildErrorWidget('❌ Error loading data');
@@ -420,12 +415,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
           return _buildLoadingWidget();
         }
 
-        final evaluations = snapshot.data!;
-
-        final filteredEvaluations = evaluations.where((eval) {
-          final name = eval['name']?.toString().toLowerCase() ?? '';
-          return name.contains(_searchQuery);
-        }).toList();
+        final filteredEvaluations = _filterByName(snapshot.data!.docs);
 
         if (filteredEvaluations.isEmpty) {
           return _buildEmptyState(
@@ -439,18 +429,38 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
         // استخدام Column بدل ListView.builder علشان مايحصلش double scroll
         return Column(
           children: [
-            ...filteredEvaluations
-                .map((evaluation) => Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      child: _buildWaterEvaluationCard(context, evaluation),
-                    ))
-                .toList(),
+            ...filteredEvaluations.map((evaluation) => Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: _buildWaterEvaluationCard(context, evaluation),
+                )),
             const SizedBox(height: 20),
           ],
         );
       },
     );
+  }
+
+  List<QueryDocumentSnapshot> _getSwimmersWithoutEvaluation(
+    List<QueryDocumentSnapshot> swimmers,
+    List<QueryDocumentSnapshot> evaluations,
+  ) {
+    final evaluatedSwimmerNames = evaluations
+        .map((doc) => doc['name']?.toString().toLowerCase() ?? '')
+        .toSet();
+
+    return swimmers.where((swimmer) {
+      final swimmerName = swimmer['name']?.toString().toLowerCase() ?? '';
+      return !evaluatedSwimmerNames.contains(swimmerName);
+    }).toList();
+  }
+
+  List<QueryDocumentSnapshot> _filterByName(
+      List<QueryDocumentSnapshot> documents) {
+    return documents.where((doc) {
+      final name = doc['name']?.toString().toLowerCase() ?? '';
+      return name.contains(_searchQuery);
+    }).toList();
   }
 
   Widget _buildWaterSwimmerCard(
@@ -993,7 +1003,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   'notes': notesController.text,
                 });
 
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1002,7 +1012,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   ),
                 );
               } catch (e) {
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('❌ Error: $e'),
@@ -1155,7 +1165,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   'date': FieldValue.serverTimestamp(),
                 });
 
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1164,7 +1174,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   ),
                 );
               } catch (e) {
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('❌ Error: $e'),
@@ -1328,7 +1338,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   'date': FieldValue.serverTimestamp(),
                 });
 
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1337,7 +1347,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   ),
                 );
               } catch (e) {
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('❌ Error: $e'),
@@ -1380,7 +1390,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                     .doc(docId)
                     .delete();
 
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1389,7 +1399,7 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
                   ),
                 );
               } catch (e) {
-                // ignore: use_build_context_synchronously
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('❌ Error: $e'),
@@ -1407,5 +1417,11 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
