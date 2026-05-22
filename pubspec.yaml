@@ -62,6 +62,8 @@ flutter:
     - assets/swimming_background1.jpeg
     - assets/swimming_background2.jpeg
     - assets/logo.jpg
+    - assets/google.png
+    - assets/apple.png
 
   uses-material-design: true
 
