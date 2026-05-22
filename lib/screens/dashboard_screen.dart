@@ -7,17 +7,33 @@ import 'active_subs_screen.dart';
 import 'expired_subs_screen.dart';
 import 'pending_evals_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final Stream<QuerySnapshot> _swimmersStream;
+  late final Stream<QuerySnapshot> _evaluationsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _swimmersStream =
+        _firestore.collection(AppCollections.swimmers).snapshots();
+    _evaluationsStream =
+        _firestore.collection(AppCollections.evaluations).snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection(AppCollections.swimmers)
-            .snapshots(),
+        stream: _swimmersStream,
         builder: (context, swimmersSnapshot) {
           if (!swimmersSnapshot.hasData) {
             return Center(
@@ -35,15 +51,10 @@ class DashboardScreen extends StatelessWidget {
           }
 
           final swimmers = swimmersSnapshot.data!.docs;
-          final totalSwimmers = swimmers.length;
-          final activeSubs = swimmers.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return data[AppFields.subscriptionStatus] == AppStatuses.active;
-          }).length;
-          final expiredSubs = swimmers.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return data[AppFields.subscriptionStatus] == AppStatuses.expired;
-          }).length;
+          final counts = _getSubscriptionCounts(swimmers);
+          final totalSwimmers = counts.total;
+          final activeSubs = counts.active;
+          final expiredSubs = counts.expired;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -106,16 +117,11 @@ class DashboardScreen extends StatelessWidget {
                       },
                     ),
                     StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection(AppCollections.evaluations)
-                          .snapshots(),
+                      stream: _evaluationsStream,
                       builder: (context, evalSnapshot) {
                         final pendingEvals = evalSnapshot.hasData
-                            ? evalSnapshot.data!.docs.where((doc) {
-                                final data = doc.data() as Map<String, dynamic>;
-                                return data['passed'] == 'No' ||
-                                    data['passed'] == null;
-                              }).length
+                            ? _getPendingEvaluationCount(
+                                evalSnapshot.data!.docs)
                             : 0;
 
                         return _buildWaterStatCard(
@@ -163,7 +169,7 @@ class DashboardScreen extends StatelessWidget {
                         color: Colors.white.withOpacity(0.8),
                       ),
                       const SizedBox(width: 12),
-                      Text(
+                      const Text(
                         "Today's Schedule",
                         style: TextStyle(
                           fontSize: 18,
@@ -185,6 +191,41 @@ class DashboardScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  _SubscriptionCounts _getSubscriptionCounts(
+      List<QueryDocumentSnapshot> swimmers) {
+    var active = 0;
+    var expired = 0;
+
+    for (final doc in swimmers) {
+      final data = doc.data() as Map<String, dynamic>;
+      final status = data[AppFields.subscriptionStatus];
+      if (status == AppStatuses.active) {
+        active++;
+      } else if (status == AppStatuses.expired) {
+        expired++;
+      }
+    }
+
+    return _SubscriptionCounts(
+      total: swimmers.length,
+      active: active,
+      expired: expired,
+    );
+  }
+
+  int _getPendingEvaluationCount(List<QueryDocumentSnapshot> evaluations) {
+    var pending = 0;
+
+    for (final doc in evaluations) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['passed'] == 'No' || data['passed'] == null) {
+        pending++;
+      }
+    }
+
+    return pending;
   }
 
   Widget _buildWaterWelcomeSection() {
@@ -250,7 +291,7 @@ class DashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${DateFormat('EEEE, MMMM d').format(DateTime.now())}',
+                      DateFormat('EEEE, MMMM d').format(DateTime.now()),
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 14,
@@ -480,7 +521,7 @@ class DashboardScreen extends StatelessWidget {
             child: Center(
               child: Text(
                 groupName.replaceAll('Group ', 'G'),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -659,7 +700,7 @@ class DashboardScreen extends StatelessWidget {
                           final level = data['level'] ?? 'Not Set';
 
                           final attendanceMap = data['attendance'] ?? {};
-                          final totalSessions = 8;
+                          const totalSessions = 8;
                           final attendedCount = attendanceMap.values
                               .where((v) => v['present'] == true)
                               .length;
@@ -721,6 +762,7 @@ class DashboardScreen extends StatelessWidget {
                                             'present': !isPresent,
                                           }
                                         });
+                                        if (!context.mounted) return;
                                         setStateDialog(() {});
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
@@ -736,6 +778,7 @@ class DashboardScreen extends StatelessWidget {
                                           ),
                                         );
                                       } catch (e) {
+                                        if (!context.mounted) return;
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
@@ -839,4 +882,16 @@ class DashboardScreen extends StatelessWidget {
     if (group.contains('Group 5')) return const Color(0xFFF44336);
     return Colors.grey;
   }
+}
+
+class _SubscriptionCounts {
+  const _SubscriptionCounts({
+    required this.total,
+    required this.active,
+    required this.expired,
+  });
+
+  final int total;
+  final int active;
+  final int expired;
 }
