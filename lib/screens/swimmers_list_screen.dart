@@ -12,7 +12,16 @@ class SwimmersListScreen extends StatefulWidget {
 
 class _SwimmersListScreenState extends State<SwimmersListScreen> {
   final TextEditingController _searchController = TextEditingController();
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _swimmersStream;
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _swimmersStream = FirebaseFirestore.instance
+        .collection(AppCollections.swimmers)
+        .snapshots();
+  }
 
   // دالة لعرض dialog إضافة سباح جديد
   void _showAddSwimmerDialog() {
@@ -20,6 +29,7 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
       context: context,
       builder: (context) => AddSwimmerDialog(
         onSwimmerAdded: () {
+          if (!mounted) return;
           setState(() {}); // نحدث الواجهة بعد الإضافة
         },
       ),
@@ -323,10 +333,8 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
   }
 
   Widget _buildSwimmersList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection(AppCollections.swimmers)
-          .snapshots(),
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _swimmersStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -359,21 +367,7 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
           );
         }
 
-        final swimmers = snapshot.data!.docs;
-
-        // نفلتر حسب البحث
-        final filteredSwimmers = swimmers.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          final name = data['name']?.toString().toLowerCase() ?? '';
-          return name.contains(_searchQuery);
-        }).toList();
-
-        // نرتبهم حسب الاسم
-        filteredSwimmers.sort((a, b) {
-          final aName = (a.data() as Map<String, dynamic>)['name'] ?? '';
-          final bName = (b.data() as Map<String, dynamic>)['name'] ?? '';
-          return aName.compareTo(bName);
-        });
+        final filteredSwimmers = _filterAndSortSwimmers(snapshot.data!.docs);
 
         if (filteredSwimmers.isEmpty) {
           return Center(
@@ -420,11 +414,12 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
         }
 
         return ListView.builder(
+          key: const PageStorageKey<String>('swimmers_list_scroll'),
           padding: const EdgeInsets.all(16),
           itemCount: filteredSwimmers.length,
           itemBuilder: (context, index) {
             final swimmer = filteredSwimmers[index];
-            final data = swimmer.data() as Map<String, dynamic>;
+            final data = swimmer.data();
 
             return _buildWaterSwimmerCard(
               context,
@@ -444,6 +439,26 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
         );
       },
     );
+  }
+
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _filterAndSortSwimmers(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> swimmers,
+  ) {
+    // نفلتر حسب البحث
+    final filteredSwimmers = swimmers.where((doc) {
+      final data = doc.data();
+      final name = data['name']?.toString().toLowerCase() ?? '';
+      return name.contains(_searchQuery);
+    }).toList();
+
+    // نرتبهم حسب الاسم
+    filteredSwimmers.sort((a, b) {
+      final aName = a.data()['name'] ?? '';
+      final bName = b.data()['name'] ?? '';
+      return aName.compareTo(bName);
+    });
+
+    return filteredSwimmers;
   }
 
   Widget _buildWaterSwimmerCard(
@@ -863,7 +878,7 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
                                       emergencyContact:
                                           emergencyController.text,
                                     );
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       Navigator.pop(context);
                                     }
                                   },
@@ -1067,7 +1082,7 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
                         child: TextButton(
                           onPressed: () async {
                             await _deleteSwimmer(swimmerId);
-                            if (mounted) {
+                            if (context.mounted) {
                               Navigator.pop(
                                   context); // Close confirmation dialog
                               Navigator.pop(context); // Close edit dialog
@@ -1332,6 +1347,7 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
+    if (!mounted) return;
     if (picked != null) {
       setState(() {
         _joinDateController.text = DateFormat('yyyy-MM-dd').format(picked);
@@ -1372,7 +1388,7 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
           ),
         );
       } catch (e) {
-        print('Error adding swimmer: $e');
+        debugPrint('Error adding swimmer: $e');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1381,9 +1397,11 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
           ),
         );
       } finally {
-        setState(() {
-          _isSubmitting = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
       }
     }
   }
