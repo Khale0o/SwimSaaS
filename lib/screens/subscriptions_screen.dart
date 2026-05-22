@@ -1492,6 +1492,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         AppFields.lastRenewalDate: Timestamp.now(),
       });
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text("Subscription renewed successfully!"),
@@ -1502,6 +1503,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error renewing subscription: $e"),
@@ -1538,6 +1540,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         }
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Successfully renewed $renewedCount subscriptions!"),
@@ -1548,6 +1551,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error in bulk renewal: $e"),
