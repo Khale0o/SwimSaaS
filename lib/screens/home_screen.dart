@@ -20,13 +20,33 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
+  final List<Widget> _pages = const [
+    KeyedSubtree(
+      key: PageStorageKey<String>('home_dashboard'),
+      child: DashboardScreen(),
+    ),
+    KeyedSubtree(
+      key: PageStorageKey<String>('home_evaluation'),
+      child: EvaluationScreen(),
+    ),
+    KeyedSubtree(
+      key: PageStorageKey<String>('home_subscriptions'),
+      child: SubscriptionsScreen(),
+    ),
+    KeyedSubtree(
+      key: PageStorageKey<String>('home_parents'),
+      child: ParentsScreen(),
+    ),
+    KeyedSubtree(
+      key: PageStorageKey<String>('home_profile'),
+      child: ProfileScreen(),
+    ),
+  ];
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isAdmin = false;
   bool _checkingAdmin = true;
-
-  List<Widget> _pages = [];
 
   @override
   void initState() {
@@ -41,44 +61,33 @@ class _HomeScreenState extends State<HomeScreen> {
           .doc(_auth.currentUser?.uid)
           .get();
 
+      if (!mounted) return;
       if (userDoc.exists) {
         setState(() {
           _isAdmin = userDoc[AppFields.isAdmin] ?? false;
           _checkingAdmin = false;
-          _initializePages();
         });
       } else {
         setState(() {
           _checkingAdmin = false;
-          _initializePages();
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _checkingAdmin = false;
-        _initializePages();
       });
     }
-  }
-
-  void _initializePages() {
-    _pages = [
-      const DashboardScreen(),
-      const EvaluationScreen(),
-      const SubscriptionsScreen(),
-      const ParentsScreen(),
-      const ProfileScreen(),
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
     if (_checkingAdmin) {
-      return Scaffold(
-        backgroundColor: const Color(0xFF000428),
+      return const Scaffold(
+        backgroundColor: Color(0xFF000428),
         body: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF42A5F5)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF42A5F5)),
           ),
         ),
       );
@@ -104,9 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: PageView(
                     controller: _pageController,
                     physics: const ClampingScrollPhysics(),
-                    onPageChanged: (index) {
-                      setState(() => _currentIndex = index);
-                    },
+                    onPageChanged: _handlePageChanged,
                     children: _pages,
                   ),
                 ),
@@ -124,6 +131,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  void _handlePageChanged(int index) {
+    if (_currentIndex == index) return;
+    setState(() => _currentIndex = index);
+  }
+
+  void _goToPage(int index) {
+    if (_currentIndex == index || !_pageController.hasClients) return;
+
+    // Direct taps jump instead of animating through heavy intermediate pages.
+    setState(() => _currentIndex = index);
+    _pageController.jumpToPage(index);
   }
 
   Widget _buildWaveBackground() {
@@ -188,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Swim Academy',
                     style: TextStyle(
                       fontSize: 28,
@@ -338,13 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isActive = _currentIndex == index;
 
     return GestureDetector(
-      onTap: () {
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      },
+      onTap: () => _goToPage(index),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -608,12 +622,14 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       await FirebaseAuth.instance.signOut();
 
+      if (!context.mounted) return;
       // استخدام Navigator.pushReplacement لتوجيه إلى شاشة اللوجين
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
         (Route<dynamic> route) => false, // هذا يزيل كل الشاشات من الـ stack
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Logout failed: $e'),
@@ -655,6 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
         await user.reauthenticateWithCredential(credential);
         await user.updatePassword(newPassword);
 
+        if (!context.mounted) return;
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password changed successfully')),
@@ -667,13 +684,21 @@ class _HomeScreenState extends State<HomeScreen> {
       } else if (e.code == 'weak-password') {
         message = 'New password is too weak';
       }
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Password change failed: $e')),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 }
