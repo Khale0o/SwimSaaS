@@ -13,8 +13,16 @@ class SubscriptionsScreen extends StatefulWidget {
 class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _searchController = TextEditingController();
+  late final Stream<QuerySnapshot> _swimmersStream;
   String _searchQuery = '';
   int _currentTabIndex = 0; // 0: All, 1: Active, 2: Expiring Soon, 3: Expired
+
+  @override
+  void initState() {
+    super.initState();
+    _swimmersStream =
+        _firestore.collection(AppCollections.swimmers).snapshots();
+  }
 
   // Function to get subscription status from data
   String _getSubscriptionStatus(Map<String, dynamic> data) {
@@ -199,92 +207,56 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
 
                 const SizedBox(height: 16),
 
-                // Quick Stats
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: _firestore
-                        .collection(AppCollections.swimmers)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return _buildLoadingWidget();
-                      }
-
-                      final swimmers = snapshot.data!.docs;
-                      final counts = _getCategoryCounts(swimmers);
-
-                      return _buildStatsGrid(
-                        counts['active']!,
-                        counts['expiringSoon']!,
-                        counts['expired']!,
-                        counts['total']!,
-                      );
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Tabs
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.15),
-                          Colors.white.withOpacity(0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          _buildTab('All', 0, Icons.all_inclusive_rounded),
-                          _buildTab('Active', 1, Icons.check_circle_rounded),
-                          _buildTab('Expiring', 2, Icons.warning_rounded),
-                          _buildTab('Expired', 3, Icons.error_rounded),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Subscriptions List based on selected tab
+                // Shared swimmers listener for stats and list rendering.
                 StreamBuilder<QuerySnapshot>(
-                  stream: _firestore
-                      .collection(AppCollections.swimmers)
-                      .snapshots(),
+                  stream: _swimmersStream,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
-                      return _buildLoadingWidget();
+                      return Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: _buildLoadingWidget(),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildTabsSection(),
+                          const SizedBox(height: 16),
+                          _buildLoadingWidget(),
+                        ],
+                      );
                     }
 
                     final allSwimmers = snapshot.data!.docs;
+                    final counts = _getCategoryCounts(allSwimmers);
                     final filteredSwimmers = _filterSwimmers(allSwimmers);
-
-                    if (filteredSwimmers.isEmpty) {
-                      return _buildEmptyState();
-                    }
 
                     return Column(
                       children: [
-                        ...filteredSwimmers
-                            .map((swimmer) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 8),
-                                  child: _buildWaterSubscriptionCard(swimmer),
-                                ))
-                            .toList(),
-                        const SizedBox(height: 20),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _buildStatsGrid(
+                            counts['active']!,
+                            counts['expiringSoon']!,
+                            counts['expired']!,
+                            counts['total']!,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildTabsSection(),
+                        const SizedBox(height: 16),
+                        if (filteredSwimmers.isEmpty)
+                          _buildEmptyState()
+                        else
+                          Column(
+                            children: [
+                              ...filteredSwimmers.map((swimmer) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    child: _buildWaterSubscriptionCard(swimmer),
+                                  )),
+                              const SizedBox(height: 20),
+                            ],
+                          ),
                       ],
                     );
                   },
@@ -302,6 +274,37 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
         onPressed: _showBulkRenewalDialog,
         backgroundColor: const Color(0xFF42A5F5),
         child: const Icon(Icons.autorenew, color: Colors.white, size: 28),
+      ),
+    );
+  }
+
+  Widget _buildTabsSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.white.withOpacity(0.15),
+              Colors.white.withOpacity(0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              _buildTab('All', 0, Icons.all_inclusive_rounded),
+              _buildTab('Active', 1, Icons.check_circle_rounded),
+              _buildTab('Expiring', 2, Icons.warning_rounded),
+              _buildTab('Expired', 3, Icons.error_rounded),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -518,23 +521,29 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     return Row(
       children: [
         Expanded(
-          child: _buildWaterStatCard("Total", total.toString(),
-              Icons.people_rounded, [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
+          child: _buildWaterStatCard(
+              "Total",
+              total.toString(),
+              Icons.people_rounded,
+              const [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildWaterStatCard("Active", active.toString(),
-              Icons.check_circle_rounded, [Colors.green, Color(0xFF66BB6A)]),
+          child: _buildWaterStatCard(
+              "Active",
+              active.toString(),
+              Icons.check_circle_rounded,
+              const [Colors.green, Color(0xFF66BB6A)]),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildWaterStatCard("Expiring", expiring.toString(),
-              Icons.warning_rounded, [Colors.orange, Color(0xFFFFB74D)]),
+              Icons.warning_rounded, const [Colors.orange, Color(0xFFFFB74D)]),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildWaterStatCard("Expired", expired.toString(),
-              Icons.error_rounded, [Colors.red, Color(0xFFEF5350)]),
+              Icons.error_rounded, const [Colors.red, Color(0xFFEF5350)]),
         ),
       ],
     );
