@@ -74,6 +74,7 @@ class _ParentsScreenState extends State<ParentsScreen> {
       context: context,
       builder: (context) => AddSwimmerDialog(
         onSwimmerAdded: () {
+          if (!mounted) return;
           _fetchSwimmersData();
         },
       ),
@@ -82,6 +83,8 @@ class _ParentsScreenState extends State<ParentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredSwimmers = _filterSwimmers(_swimmers);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -146,10 +149,12 @@ class _ParentsScreenState extends State<ParentsScreen> {
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildStatsGrid(),
+                  child: _buildStatsGrid(filteredSwimmers),
                 ),
                 const SizedBox(height: 24),
-                _isLoading ? _buildLoadingWidget() : _buildSwimmersList(),
+                _isLoading
+                    ? _buildLoadingWidget()
+                    : _buildSwimmersList(filteredSwimmers),
                 const SizedBox(height: 100),
               ],
             ),
@@ -325,12 +330,16 @@ class _ParentsScreenState extends State<ParentsScreen> {
     );
   }
 
-  Widget _buildStatsGrid() {
-    final filteredSwimmers = _swimmers.where((swimmer) {
+  List<Map<String, dynamic>> _filterSwimmers(
+    List<Map<String, dynamic>> swimmers,
+  ) {
+    return swimmers.where((swimmer) {
       final name = swimmer['swimmerName']?.toString().toLowerCase() ?? '';
       return name.contains(_searchQuery);
     }).toList();
+  }
 
+  Widget _buildStatsGrid(List<Map<String, dynamic>> filteredSwimmers) {
     final totalSwimmers = filteredSwimmers.length;
     final activeSubs = filteredSwimmers.where((swimmer) {
       return swimmer[AppFields.subscriptionStatus] == AppStatuses.active;
@@ -342,13 +351,19 @@ class _ParentsScreenState extends State<ParentsScreen> {
     return Row(
       children: [
         Expanded(
-          child: _buildWaterStatCard("Total", totalSwimmers.toString(),
-              Icons.people_rounded, [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
+          child: _buildWaterStatCard(
+              "Total",
+              totalSwimmers.toString(),
+              Icons.people_rounded,
+              const [Color(0xFF42A5F5), Color(0xFF64B5F6)]),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildWaterStatCard("Active", activeSubs.toString(),
-              Icons.check_circle_rounded, [Colors.green, Color(0xFF66BB6A)]),
+          child: _buildWaterStatCard(
+              "Active",
+              activeSubs.toString(),
+              Icons.check_circle_rounded,
+              const [Colors.green, Color(0xFF66BB6A)]),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -356,7 +371,7 @@ class _ParentsScreenState extends State<ParentsScreen> {
               "Emergency",
               withEmergencyContact.toString(),
               Icons.contact_emergency_rounded,
-              [Colors.orange, Color(0xFFFFB74D)]),
+              const [Colors.orange, Color(0xFFFFB74D)]),
         ),
       ],
     );
@@ -454,25 +469,27 @@ class _ParentsScreenState extends State<ParentsScreen> {
     );
   }
 
-  Widget _buildSwimmersList() {
-    final filteredSwimmers = _swimmers.where((swimmer) {
-      final name = swimmer['swimmerName']?.toString().toLowerCase() ?? '';
-      return name.contains(_searchQuery);
-    }).toList();
-
+  Widget _buildSwimmersList(List<Map<String, dynamic>> filteredSwimmers) {
     if (filteredSwimmers.isEmpty) {
       return _buildEmptyState();
     }
 
     return Column(
       children: [
-        ...filteredSwimmers
-            .map((swimmer) => Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: _buildWaterSwimmerCard(swimmer),
-                ))
-            .toList(),
+        ListView.builder(
+          key: const PageStorageKey<String>('parents_list_scroll'),
+          padding: EdgeInsets.zero,
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: filteredSwimmers.length,
+          itemBuilder: (context, index) {
+            final swimmer = filteredSwimmers[index];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _buildWaterSwimmerCard(swimmer),
+            );
+          },
+        ),
         const SizedBox(height: 20),
       ],
     );
@@ -821,6 +838,7 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
+    if (!mounted) return;
     if (picked != null) {
       setState(() {
         _joinDateController.text = DateFormat('yyyy-MM-dd').format(picked);
@@ -868,9 +886,11 @@ class _AddSwimmerDialogState extends State<AddSwimmerDialog> {
           ),
         );
       } finally {
-        setState(() {
-          _isSubmitting = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
       }
     }
   }
