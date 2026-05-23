@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 
 class SwimmersListScreen extends StatefulWidget {
   const SwimmersListScreen({super.key});
@@ -14,6 +15,7 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
   final TextEditingController _searchController = TextEditingController();
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _swimmersStream;
   String _searchQuery = '';
+  bool _headerVisible = true;
 
   @override
   void initState() {
@@ -46,74 +48,89 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
           _buildWaveBackground(),
 
           // المحتوى الرئيسي
-          Column(
-            children: [
-              // App Bar مع زر الرجوع
-              _buildAppBar(),
+          ResponsiveMaxWidth(
+            maxWidth: ResponsiveMaxWidths.dashboard,
+            child: Column(
+              children: [
+                // App Bar مع زر الرجوع
+                _buildAppBar(),
 
-              // Header Section بنفس تصميم الـ Dashboard
-              _buildWaterWelcomeSection(),
+                // Header Section بنفس تصميم الـ Dashboard
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOut,
+                  child: _headerVisible
+                      ? Column(
+                          children: [
+                            _buildWaterWelcomeSection(),
+                            const SizedBox(height: 24),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
+                ),
 
-              const SizedBox(height: 24),
-
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search by name...',
-                      hintStyle:
-                          TextStyle(color: Colors.white.withOpacity(0.7)),
-                      prefixIcon: Icon(Icons.search,
-                          color: Colors.white.withOpacity(0.7)),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.clear,
-                                  color: Colors.white.withOpacity(0.7)),
-                              onPressed: () {
-                                setState(() {
-                                  _searchController.clear();
-                                  _searchQuery = '';
-                                });
-                              },
-                            )
-                          : null,
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    style: const TextStyle(color: Colors.white),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value.toLowerCase();
-                      });
-                    },
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search by name...',
+                        hintStyle:
+                            TextStyle(color: Colors.white.withOpacity(0.7)),
+                        prefixIcon: Icon(Icons.search,
+                            color: Colors.white.withOpacity(0.7)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.1),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear,
+                                    color: Colors.white.withOpacity(0.7)),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value.toLowerCase();
+                        });
+                      },
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Swimmers List
-              Expanded(
-                child: _buildSwimmersList(),
-              ),
-            ],
+                // Swimmers List
+                Expanded(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _handleScrollNotification,
+                    child: _buildSwimmersList(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -219,6 +236,19 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
         ],
       ),
     );
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    final shouldShowHeader = notification.metrics.pixels <= 8;
+    if (_headerVisible != shouldShowHeader) {
+      setState(() => _headerVisible = shouldShowHeader);
+    }
+
+    return false;
   }
 
   Widget _buildWaterWelcomeSection() {
@@ -415,7 +445,7 @@ class _SwimmersListScreenState extends State<SwimmersListScreen> {
 
         return ListView.builder(
           key: const PageStorageKey<String>('swimmers_list_scroll'),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           itemCount: filteredSwimmers.length,
           itemBuilder: (context, index) {
             final swimmer = filteredSwimmers[index];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 
 class ExpiredSubsScreen extends StatefulWidget {
   const ExpiredSubsScreen({super.key});
@@ -12,6 +13,7 @@ class ExpiredSubsScreen extends StatefulWidget {
 class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _headerVisible = true;
 
   @override
   Widget build(BuildContext context) {
@@ -23,74 +25,89 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
           _buildWaveBackground(),
 
           // المحتوى الرئيسي
-          Column(
-            children: [
-              // App Bar مع زر الرجوع
-              _buildAppBar(),
+          ResponsiveMaxWidth(
+            maxWidth: ResponsiveMaxWidths.dashboard,
+            child: Column(
+              children: [
+                // App Bar مع زر الرجوع
+                _buildAppBar(),
 
-              // Header Section
-              _buildWaterWelcomeSection(),
+                // Header Section
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOut,
+                  child: _headerVisible
+                      ? Column(
+                          children: [
+                            _buildWaterWelcomeSection(),
+                            const SizedBox(height: 24),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
+                ),
 
-              const SizedBox(height: 24),
-
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search expired swimmers...',
-                      hintStyle:
-                          TextStyle(color: Colors.white.withOpacity(0.7)),
-                      prefixIcon: Icon(Icons.search,
-                          color: Colors.white.withOpacity(0.7)),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.clear,
-                                  color: Colors.white.withOpacity(0.7)),
-                              onPressed: () {
-                                setState(() {
-                                  _searchController.clear();
-                                  _searchQuery = '';
-                                });
-                              },
-                            )
-                          : null,
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    style: const TextStyle(color: Colors.white),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value.toLowerCase();
-                      });
-                    },
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search expired swimmers...',
+                        hintStyle:
+                            TextStyle(color: Colors.white.withOpacity(0.7)),
+                        prefixIcon: Icon(Icons.search,
+                            color: Colors.white.withOpacity(0.7)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.1),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear,
+                                    color: Colors.white.withOpacity(0.7)),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value.toLowerCase();
+                        });
+                      },
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Expired Swimmers List
-              Expanded(
-                child: _buildExpiredSwimmersList(),
-              ),
-            ],
+                // Expired Swimmers List
+                Expanded(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _handleScrollNotification,
+                    child: _buildExpiredSwimmersList(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -189,6 +206,19 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
         ],
       ),
     );
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    final shouldShowHeader = notification.metrics.pixels <= 8;
+    if (_headerVisible != shouldShowHeader) {
+      setState(() => _headerVisible = shouldShowHeader);
+    }
+
+    return false;
   }
 
   Widget _buildWaterWelcomeSection() {
@@ -401,7 +431,8 @@ class _ExpiredSubsScreenState extends State<ExpiredSubsScreen> {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          key: const PageStorageKey<String>('expired_subs_list_scroll'),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           itemCount: expiredSwimmers.length,
           itemBuilder: (context, index) {
             final swimmer = expiredSwimmers[index];
