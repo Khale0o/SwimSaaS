@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 
 class EvaluationScreen extends StatefulWidget {
   const EvaluationScreen({super.key});
@@ -40,136 +41,142 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
 
           // SingleChildScrollView علشان الصفحة كلها تعمل سكرول
           SingleChildScrollView(
+            key: const PageStorageKey<String>('evaluation_scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 60), // مساحة للـ Safe Area
+            child: ResponsiveMaxWidth(
+              maxWidth: ResponsiveMaxWidths.content,
+              desktopPadding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  const SizedBox(height: 60), // مساحة للـ Safe Area
 
-                // Header Section بنفس تصميم الـ Dashboard
-                _buildWaterWelcomeSection(),
+                  // Header Section بنفس تصميم الـ Dashboard
+                  _buildWaterWelcomeSection(),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Switch بين السباحين
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withOpacity(0.15),
-                          Colors.white.withOpacity(0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _showEvaluatedSwimmers
-                              ? 'Evaluated Swimmers'
-                              : 'Swimmers Without Evaluation',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontFamily: 'SF Pro',
-                          ),
+                  // Switch بين السباحين
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.15),
+                            Colors.white.withOpacity(0.05),
+                          ],
                         ),
-                        SizedBox(
-                          height: 30,
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: Switch(
-                              value: _showEvaluatedSwimmers,
-                              onChanged: (value) {
-                                setState(() {
-                                  _showEvaluatedSwimmers = value;
-                                });
-                              },
-                              activeColor: Colors.white,
-                              activeTrackColor: const Color(0xFF4CAF50),
-                              inactiveThumbColor: Colors.white,
-                              inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _showEvaluatedSwimmers
+                                ? 'Evaluated Swimmers'
+                                : 'Swimmers Without Evaluation',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontFamily: 'SF Pro',
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: _showEvaluatedSwimmers
-                            ? 'Search evaluated swimmers...'
-                            : 'Search swimmers without evaluation...',
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        prefixIcon: Icon(Icons.search,
-                            color: Colors.white.withOpacity(0.7)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.1),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(Icons.clear,
-                                    color: Colors.white.withOpacity(0.7)),
-                                onPressed: () {
+                          SizedBox(
+                            height: 30,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: Switch(
+                                value: _showEvaluatedSwimmers,
+                                onChanged: (value) {
                                   setState(() {
-                                    _searchController.clear();
-                                    _searchQuery = '';
+                                    _showEvaluatedSwimmers = value;
                                   });
                                 },
-                              )
-                            : null,
+                                activeColor: Colors.white,
+                                activeTrackColor: const Color(0xFF4CAF50),
+                                inactiveThumbColor: Colors.white,
+                                inactiveTrackColor:
+                                    Colors.grey.withOpacity(0.5),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      style: const TextStyle(color: Colors.white),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value.toLowerCase();
-                        });
-                      },
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Swimmers List - بدون ListView.builder علشان مايحصلش double scroll
-                _showEvaluatedSwimmers
-                    ? _buildEvaluatedSwimmersList()
-                    : _buildNonEvaluatedSwimmersList(),
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: _showEvaluatedSwimmers
+                              ? 'Search evaluated swimmers...'
+                              : 'Search swimmers without evaluation...',
+                          hintStyle:
+                              TextStyle(color: Colors.white.withOpacity(0.7)),
+                          prefixIcon: Icon(Icons.search,
+                              color: Colors.white.withOpacity(0.7)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.1),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Icons.clear,
+                                      color: Colors.white.withOpacity(0.7)),
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value.toLowerCase();
+                          });
+                        },
+                      ),
+                    ),
+                  ),
 
-                const SizedBox(height: 100), // مساحة للنافجيشن بار
-              ],
+                  const SizedBox(height: 16),
+
+                  // Swimmers List - بدون ListView.builder علشان مايحصلش double scroll
+                  _showEvaluatedSwimmers
+                      ? _buildEvaluatedSwimmersList()
+                      : _buildNonEvaluatedSwimmersList(),
+
+                  SizedBox(height: floatingNavSafeBottomPadding(context)),
+                ],
+              ),
             ),
           ),
         ],
