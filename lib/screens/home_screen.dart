@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 import 'package:swim/screens/login_screen.dart';
 import 'dashboard_screen.dart';
 import 'evaluation_screen.dart';
@@ -21,23 +22,23 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
   final List<Widget> _pages = const [
-    KeyedSubtree(
+    _KeepAlivePage(
       key: PageStorageKey<String>('home_dashboard'),
       child: DashboardScreen(),
     ),
-    KeyedSubtree(
+    _KeepAlivePage(
       key: PageStorageKey<String>('home_evaluation'),
       child: EvaluationScreen(),
     ),
-    KeyedSubtree(
+    _KeepAlivePage(
       key: PageStorageKey<String>('home_subscriptions'),
       child: SubscriptionsScreen(),
     ),
-    KeyedSubtree(
+    _KeepAlivePage(
       key: PageStorageKey<String>('home_parents'),
       child: ParentsScreen(),
     ),
-    KeyedSubtree(
+    _KeepAlivePage(
       key: PageStorageKey<String>('home_profile'),
       child: ProfileScreen(),
     ),
@@ -101,23 +102,28 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildWaveBackground(),
 
           // Main Content - مع padding علشان متتداخلش مع النافجيشن
-          Padding(
-            padding: const EdgeInsets.only(bottom: 100), // مساحة للنافجيشن بار
-            child: Column(
-              children: [
-                // Modern Header - يظهر فقط في الداشبورد
-                if (_currentIndex == 0) _buildModernHeader(),
+          ResponsiveMaxWidth(
+            maxWidth: ResponsiveMaxWidths.wideDashboard,
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: floatingNavSafeBottomPadding(context),
+              ),
+              child: Column(
+                children: [
+                  // Modern Header - يظهر فقط في الداشبورد
+                  if (_currentIndex == 0) _buildModernHeader(),
 
-                // Page Content
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const ClampingScrollPhysics(),
-                    onPageChanged: _handlePageChanged,
-                    children: _pages,
+                  // Page Content
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const ClampingScrollPhysics(),
+                      onPageChanged: _handlePageChanged,
+                      children: _pages,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -126,7 +132,11 @@ class _HomeScreenState extends State<HomeScreen> {
             bottom: 20,
             left: 20,
             right: 20,
-            child: _buildFloatingNavBar(),
+            child: ResponsiveMaxWidth(
+              maxWidth: 760,
+              desktopPadding: EdgeInsets.zero,
+              child: _buildFloatingNavBar(),
+            ),
           ),
         ],
       ),
@@ -700,5 +710,29 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+}
+
+class _KeepAlivePage extends StatefulWidget {
+  const _KeepAlivePage({
+    super.key,
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin<_KeepAlivePage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

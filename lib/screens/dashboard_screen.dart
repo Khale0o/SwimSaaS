@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 import 'swimmers_list_screen.dart';
 import 'active_subs_screen.dart';
 import 'expired_subs_screen.dart';
@@ -58,134 +59,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Welcome Section
-                _buildWaterWelcomeSection(),
+            child: ResponsiveMaxWidth(
+              maxWidth: ResponsiveMaxWidths.dashboard,
+              desktopPadding: EdgeInsets.zero,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Welcome Section
+                  _buildWaterWelcomeSection(),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Quick Stats Grid
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  children: [
-                    _buildWaterStatCard(
-                      "Total Swimmers",
-                      totalSwimmers.toString(),
-                      Icons.pool_rounded,
-                      const [Color(0xFF42A5F5), Color(0xFF64B5F6)],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SwimmersListScreen(),
+                  // Quick Stats Grid
+                  _buildResponsiveStatsGrid(
+                    context,
+                    totalSwimmers: totalSwimmers,
+                    activeSubs: activeSubs,
+                    expiredSubs: expiredSubs,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Today's Schedule Header
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.1),
+                          Colors.white.withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "Today's Schedule",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'SF Pro',
                           ),
-                        );
-                      },
-                    ),
-                    _buildWaterStatCard(
-                      "Active Subs",
-                      activeSubs.toString(),
-                      Icons.credit_card_rounded,
-                      const [Color(0xFF4CAF50), Color(0xFF66BB6A)],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ActiveSubsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildWaterStatCard(
-                      "Expired Subs",
-                      expiredSubs.toString(),
-                      Icons.warning_amber_rounded,
-                      const [Color(0xFFFF9800), Color(0xFFFFB74D)],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ExpiredSubsScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    StreamBuilder<QuerySnapshot>(
-                      stream: _evaluationsStream,
-                      builder: (context, evalSnapshot) {
-                        final pendingEvals = evalSnapshot.hasData
-                            ? _getPendingEvaluationCount(
-                                evalSnapshot.data!.docs)
-                            : 0;
-
-                        return _buildWaterStatCard(
-                          "Pending Evals",
-                          pendingEvals.toString(),
-                          Icons.assignment_rounded,
-                          const [Color(0xFF9C27B0), Color(0xFFBA68C8)],
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const PendingEvalsScreen(),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Today's Schedule Header
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.1),
-                        Colors.white.withOpacity(0.05),
+                        ),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                    ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.schedule_rounded,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        "Today's Schedule",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'SF Pro',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Today's Groups Schedule
-                _buildWaterTodaysGroupsSchedule(context, swimmers),
-              ],
+                  // Today's Groups Schedule
+                  _buildWaterTodaysGroupsSchedule(context, swimmers),
+                ],
+              ),
             ),
           );
         },
@@ -226,6 +161,109 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return pending;
+  }
+
+  Widget _buildResponsiveStatsGrid(
+    BuildContext context, {
+    required int totalSwimmers,
+    required int activeSubs,
+    required int expiredSubs,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = context.isMobile
+            ? 2
+            : responsiveGridColumnCount(
+                width,
+                mobileColumns: 2,
+                tabletColumns: 2,
+                desktopColumns: 4,
+                largeDesktopColumns: 4,
+              );
+        final childAspectRatio = context.isMobile
+            ? 1.0
+            : context.isTablet
+                ? 1.35
+                : 1.65;
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: childAspectRatio,
+          children: [
+            _buildWaterStatCard(
+              "Total Swimmers",
+              totalSwimmers.toString(),
+              Icons.pool_rounded,
+              const [Color(0xFF42A5F5), Color(0xFF64B5F6)],
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SwimmersListScreen(),
+                  ),
+                );
+              },
+            ),
+            _buildWaterStatCard(
+              "Active Subs",
+              activeSubs.toString(),
+              Icons.credit_card_rounded,
+              const [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ActiveSubsScreen(),
+                  ),
+                );
+              },
+            ),
+            _buildWaterStatCard(
+              "Expired Subs",
+              expiredSubs.toString(),
+              Icons.warning_amber_rounded,
+              const [Color(0xFFFF9800), Color(0xFFFFB74D)],
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ExpiredSubsScreen(),
+                  ),
+                );
+              },
+            ),
+            StreamBuilder<QuerySnapshot>(
+              stream: _evaluationsStream,
+              builder: (context, evalSnapshot) {
+                final pendingEvals = evalSnapshot.hasData
+                    ? _getPendingEvaluationCount(evalSnapshot.data!.docs)
+                    : 0;
+
+                return _buildWaterStatCard(
+                  "Pending Evals",
+                  pendingEvals.toString(),
+                  Icons.assignment_rounded,
+                  const [Color(0xFF9C27B0), Color(0xFFBA68C8)],
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PendingEvalsScreen(),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildWaterWelcomeSection() {
