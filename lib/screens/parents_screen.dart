@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 
 class ParentsScreen extends StatefulWidget {
   const ParentsScreen({super.key});
@@ -91,72 +92,77 @@ class _ParentsScreenState extends State<ParentsScreen> {
         children: [
           _buildWaveBackground(),
           SingleChildScrollView(
+            key: const PageStorageKey<String>('parents_screen_scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
-                _buildWaterWelcomeSection(),
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search swimmers by name...',
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        prefixIcon: Icon(Icons.search,
-                            color: Colors.white.withOpacity(0.7)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.1),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(Icons.clear,
-                                    color: Colors.white.withOpacity(0.7)),
-                                onPressed: () {
-                                  setState(() {
-                                    _searchController.clear();
-                                    _searchQuery = '';
-                                  });
-                                },
-                              )
-                            : null,
+            child: ResponsiveMaxWidth(
+              maxWidth: ResponsiveMaxWidths.content,
+              desktopPadding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  const SizedBox(height: 60),
+                  _buildWaterWelcomeSection(),
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
-                      style: const TextStyle(color: Colors.white),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value.toLowerCase();
-                        });
-                      },
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search swimmers by name...',
+                          hintStyle:
+                              TextStyle(color: Colors.white.withOpacity(0.7)),
+                          prefixIcon: Icon(Icons.search,
+                              color: Colors.white.withOpacity(0.7)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.1),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Icons.clear,
+                                      color: Colors.white.withOpacity(0.7)),
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value.toLowerCase();
+                          });
+                        },
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildStatsGrid(filteredSwimmers),
-                ),
-                const SizedBox(height: 24),
-                _isLoading
-                    ? _buildLoadingWidget()
-                    : _buildSwimmersList(filteredSwimmers),
-                const SizedBox(height: 100),
-              ],
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildStatsGrid(filteredSwimmers),
+                  ),
+                  const SizedBox(height: 24),
+                  _isLoading
+                      ? _buildLoadingWidget()
+                      : _buildSwimmersList(filteredSwimmers),
+                  SizedBox(height: floatingNavSafeBottomPadding(context)),
+                ],
+              ),
             ),
           ),
         ],

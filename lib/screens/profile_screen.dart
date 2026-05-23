@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 import 'package:swim/screens/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -596,21 +597,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           _buildWaveBackground(),
           SingleChildScrollView(
+            key: const PageStorageKey<String>('profile_scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
-                _buildWaterWelcomeSection(),
-                const SizedBox(height: 24),
-                _buildProfileHeader(),
-                const SizedBox(height: 30),
-                _buildProfileForm(),
-                const SizedBox(height: 16),
-                _buildChangePasswordSection(),
-                const SizedBox(height: 24),
-                _buildLogoutButton(),
-                const SizedBox(height: 100),
-              ],
+            child: ResponsiveMaxWidth(
+              maxWidth: ResponsiveMaxWidths.form,
+              desktopPadding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  const SizedBox(height: 60),
+                  _buildWaterWelcomeSection(),
+                  const SizedBox(height: 24),
+                  _buildProfileHeader(),
+                  const SizedBox(height: 30),
+                  _buildProfileForm(),
+                  const SizedBox(height: 16),
+                  _buildChangePasswordSection(),
+                  const SizedBox(height: 24),
+                  _buildLogoutButton(),
+                  SizedBox(height: floatingNavSafeBottomPadding(context)),
+                ],
+              ),
             ),
           ),
         ],
