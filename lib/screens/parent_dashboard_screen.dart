@@ -16,11 +16,23 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
 
-  final List<Widget> _pages = [
-    const ModernAttendancePage(),
-    const ModernEvaluationsPage(),
-    const ModernSubscriptionPage(),
-    const ModernProfilePage(),
+  final List<Widget> _pages = const [
+    _ParentKeepAlivePage(
+      key: PageStorageKey<String>('parent_attendance'),
+      child: ModernAttendancePage(),
+    ),
+    _ParentKeepAlivePage(
+      key: PageStorageKey<String>('parent_evaluations'),
+      child: ModernEvaluationsPage(),
+    ),
+    _ParentKeepAlivePage(
+      key: PageStorageKey<String>('parent_subscription'),
+      child: ModernSubscriptionPage(),
+    ),
+    _ParentKeepAlivePage(
+      key: PageStorageKey<String>('parent_profile'),
+      child: ModernProfilePage(),
+    ),
   ];
 
   @override
@@ -614,6 +626,36 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
         ),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+}
+
+class _ParentKeepAlivePage extends StatefulWidget {
+  const _ParentKeepAlivePage({
+    super.key,
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  State<_ParentKeepAlivePage> createState() => _ParentKeepAlivePageState();
+}
+
+class _ParentKeepAlivePageState extends State<_ParentKeepAlivePage>
+    with AutomaticKeepAliveClientMixin<_ParentKeepAlivePage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }
 
@@ -1630,18 +1672,33 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
 }
 
 // صفحة البروفايل
-class ModernProfilePage extends StatelessWidget {
+class ModernProfilePage extends StatefulWidget {
   const ModernProfilePage({super.key});
+
+  @override
+  State<ModernProfilePage> createState() => _ModernProfilePageState();
+}
+
+class _ModernProfilePageState extends State<ModernProfilePage> {
+  late final Future<QuerySnapshot> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = FirebaseFirestore.instance
+        .collection(AppCollections.swimmers)
+        .where(
+          AppFields.email,
+          isEqualTo: FirebaseAuth.instance.currentUser?.email,
+        )
+        .limit(1)
+        .get();
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<QuerySnapshot>(
-      future: FirebaseFirestore.instance
-          .collection(AppCollections.swimmers)
-          .where(AppFields.email,
-              isEqualTo: FirebaseAuth.instance.currentUser?.email)
-          .limit(1)
-          .get(),
+      future: _profileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
