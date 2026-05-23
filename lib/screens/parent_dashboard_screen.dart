@@ -14,6 +14,7 @@ class ParentDashboardScreen extends StatefulWidget {
 
 class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
   int _currentIndex = 0;
+  bool _headerVisible = true;
   final PageController _pageController = PageController();
 
   final List<Widget> _pages = const [
@@ -48,17 +49,26 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
           Column(
             children: [
               // Modern Header with Menu
-              _buildModernHeader(),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeOut,
+                child: _headerVisible
+                    ? _buildModernHeader()
+                    : const SizedBox.shrink(),
+              ),
 
               // Page Content
               Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const ClampingScrollPhysics(), // لمنع الكراشات
-                  onPageChanged: (index) {
-                    setState(() => _currentIndex = index);
-                  },
-                  children: _pages,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: _handleScrollNotification,
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const ClampingScrollPhysics(), // لمنع الكراشات
+                    onPageChanged: (index) {
+                      setState(() => _currentIndex = index);
+                    },
+                    children: _pages,
+                  ),
                 ),
               ),
             ],
@@ -124,6 +134,19 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
         ],
       ),
     );
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    final shouldShowHeader = notification.metrics.pixels <= 8;
+    if (_headerVisible != shouldShowHeader) {
+      setState(() => _headerVisible = shouldShowHeader);
+    }
+
+    return false;
   }
 
   Widget _buildModernHeader() {

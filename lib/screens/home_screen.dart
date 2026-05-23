@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  bool _dashboardHeaderVisible = true;
   final PageController _pageController = PageController();
   final List<Widget> _pages = const [
     _KeepAlivePage(
@@ -111,15 +112,24 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   // Modern Header - يظهر فقط في الداشبورد
-                  if (_currentIndex == 0) _buildModernHeader(),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeOut,
+                    child: _currentIndex == 0 && _dashboardHeaderVisible
+                        ? _buildModernHeader()
+                        : const SizedBox.shrink(),
+                  ),
 
                   // Page Content
                   Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const ClampingScrollPhysics(),
-                      onPageChanged: _handlePageChanged,
-                      children: _pages,
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: _handleScrollNotification,
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const ClampingScrollPhysics(),
+                        onPageChanged: _handlePageChanged,
+                        children: _pages,
+                      ),
                     ),
                   ),
                 ],
@@ -146,6 +156,19 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handlePageChanged(int index) {
     if (_currentIndex == index) return;
     setState(() => _currentIndex = index);
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (_currentIndex != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    final shouldShowHeader = notification.metrics.pixels <= 8;
+    if (_dashboardHeaderVisible != shouldShowHeader) {
+      setState(() => _dashboardHeaderVisible = shouldShowHeader);
+    }
+
+    return false;
   }
 
   void _goToPage(int index) {
