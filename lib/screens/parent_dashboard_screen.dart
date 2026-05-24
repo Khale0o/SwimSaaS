@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/core/responsive/responsive_layout.dart';
 import 'package:swim/screens/login_screen.dart';
 
 class ParentDashboardScreen extends StatefulWidget {
@@ -46,32 +47,35 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
           _buildWaveBackground(),
 
           // Main Content
-          Column(
-            children: [
-              // Modern Header with Menu
-              AnimatedSize(
-                duration: const Duration(milliseconds: 150),
-                curve: Curves.easeOut,
-                child: _headerVisible
-                    ? _buildModernHeader()
-                    : const SizedBox.shrink(),
-              ),
+          ResponsiveMaxWidth(
+            maxWidth: ResponsiveMaxWidths.content,
+            child: Column(
+              children: [
+                // Modern Header with Menu
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOut,
+                  child: _headerVisible
+                      ? _buildModernHeader()
+                      : const SizedBox.shrink(),
+                ),
 
-              // Page Content
-              Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: _handleScrollNotification,
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const ClampingScrollPhysics(), // لمنع الكراشات
-                    onPageChanged: (index) {
-                      setState(() => _currentIndex = index);
-                    },
-                    children: _pages,
+                // Page Content
+                Expanded(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _handleScrollNotification,
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const ClampingScrollPhysics(), // لمنع الكراشات
+                      onPageChanged: (index) {
+                        setState(() => _currentIndex = index);
+                      },
+                      children: _pages,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
 
           // Floating Navigation Bar
@@ -79,7 +83,11 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
             bottom: 20,
             left: 20,
             right: 20,
-            child: _buildFloatingNavBar(),
+            child: ResponsiveMaxWidth(
+              maxWidth: ResponsiveMaxWidths.content,
+              desktopPadding: EdgeInsets.zero,
+              child: _buildFloatingNavBar(),
+            ),
           ),
         ],
       ),
@@ -851,7 +859,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
 
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 100),
+      padding: EdgeInsets.only(bottom: floatingNavSafeBottomPadding(context)),
       itemCount: records.length,
       itemBuilder: (context, index) {
         final record = records[index];
@@ -1132,7 +1140,7 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
 
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 100),
+      padding: EdgeInsets.only(bottom: floatingNavSafeBottomPadding(context)),
       itemCount: _evaluations.length,
       itemBuilder: (context, index) {
         final evaluation = _evaluations[index];
@@ -1327,7 +1335,8 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ListView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 100),
+              padding: EdgeInsets.only(
+                  bottom: floatingNavSafeBottomPadding(context)),
               children: [
                 // Subscription Card
                 _buildSubscriptionCard(),
@@ -1748,7 +1757,8 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: ListView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 100),
+            padding:
+                EdgeInsets.only(bottom: floatingNavSafeBottomPadding(context)),
             children: [
               // Profile Header
               _buildProfileHeader(data),
