@@ -123,15 +123,19 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           message = '❌ Registration failed. ${e.message}';
         }
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       } finally {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -317,7 +321,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                 child: Icon(
                                   role['icon'] as IconData,
                                   color: isSelected
-                                      ? Color(0xFF42A5F5)
+                                      ? const Color(0xFF42A5F5)
                                       : Colors.white,
                                   size: 20,
                                 ),
@@ -329,7 +333,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                   children: [
                                     Text(
                                       role['title'] as String,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
@@ -616,7 +620,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                                     });
                                   },
                                   activeColor: Colors.white,
-                                  checkColor: Color(0xFF42A5F5),
+                                  checkColor: const Color(0xFF42A5F5),
                                 ),
                               ),
                               Expanded(

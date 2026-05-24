@@ -59,7 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
         }
       } catch (e) {
-        print('Error loading user data: $e');
+        debugPrint('Error loading user data: $e');
       }
     }
 
@@ -233,7 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _simpleLogout() async {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
           decoration: BoxDecoration(
@@ -335,7 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         child: TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pop(dialogContext),
                           child: const Text(
                             'Cancel',
                             style: TextStyle(
@@ -358,15 +358,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: TextButton(
                           onPressed: () async {
-                            Navigator.pop(context);
+                            Navigator.pop(dialogContext);
                             await _auth.signOut();
-                            if (mounted) {
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginScreen()),
-                                (route) => false,
-                              );
-                            }
+                            if (!mounted) return;
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                              (route) => false,
+                            );
                           },
                           child: const Text(
                             'Logout',

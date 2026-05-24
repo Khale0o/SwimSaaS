@@ -39,6 +39,7 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
           AppFields.needsApproval: false,
         });
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('User is now admin!'),
@@ -47,6 +48,7 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
         );
         _emailController.clear();
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('User not found'),
@@ -55,6 +57,7 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -63,6 +66,7 @@ class _AdminSetupScreenState extends State<AdminSetupScreen> {
       );
     }
 
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
     });

@@ -169,7 +169,7 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Swim Dashboard',
                     style: TextStyle(
                       fontSize: 28,
@@ -417,17 +417,19 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
 
   Future<void> _simpleLogout(BuildContext context) async {
     try {
-      print('🔄 Starting logout...');
+      debugPrint('🔄 Starting logout...');
 
       // 1. Firebase logout
       await FirebaseAuth.instance.signOut();
-      print('✅ Firebase signed out');
+      debugPrint('✅ Firebase signed out');
 
       // 2. أبسط طريقة - أعمل create لشاشة اللوجين مباشرة
+      if (!context.mounted) return;
       _goToLoginScreen(context);
     } catch (e) {
-      print('❌ Logout error: $e');
+      debugPrint('❌ Logout error: $e');
       // حتى لو في error روح للوجين
+      if (!context.mounted) return;
       _goToLoginScreen(context);
     }
   }
@@ -577,11 +579,13 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
   Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
+      if (!context.mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
         (route) => false,
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Logout failed: $e'),
@@ -628,6 +632,7 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
         await user.reauthenticateWithCredential(credential);
         await user.updatePassword(newPassword);
 
+        if (!context.mounted) return;
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -643,6 +648,7 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
       } else if (e.code == 'weak-password') {
         message = 'New password is too weak';
       }
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -650,6 +656,7 @@ class _ModernSwimDashboardState extends State<ParentDashboardScreen> {
         ),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Password change failed: $e'),
@@ -728,7 +735,7 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
         }
       }
     } catch (e) {
-      print('Error fetching attendance: $e');
+      debugPrint('Error fetching attendance: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -1018,7 +1025,7 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
         }
       }
     } catch (e) {
-      print('Error fetching evaluations: $e');
+      debugPrint('Error fetching evaluations: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -1309,7 +1316,7 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
         }
       }
     } catch (e) {
-      print('Error fetching subscription: $e');
+      debugPrint('Error fetching subscription: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

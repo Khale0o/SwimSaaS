@@ -25,6 +25,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         AppFields.approvedBy: _auth.currentUser?.uid,
       });
 
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Coach approved successfully!'),
@@ -32,6 +33,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         ),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error approving coach: $e'),
@@ -116,6 +118,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     try {
       await _firestore.collection(AppCollections.users).doc(coachId).delete();
 
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Coach rejected and removed!'),
@@ -123,6 +126,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         ),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error rejecting coach: $e'),
@@ -184,10 +188,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               .snapshots(),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData) {
-                              return Center(
+                              return const Center(
                                 child: CircularProgressIndicator(
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                      const Color(0xFF42A5F5)),
+                                      Color(0xFF42A5F5)),
                                 ),
                               );
                             }
@@ -301,7 +305,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Admin Panel',
                 style: TextStyle(
                   fontSize: 28,
@@ -394,7 +398,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.orange.withOpacity(0.3)),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Pending Approval',
                     style: TextStyle(
                       color: Colors.orange,
@@ -412,7 +416,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           Column(
             children: [
               // Approve Button
-              Container(
+              SizedBox(
                 width: 100,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -436,7 +440,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               const SizedBox(height: 8),
 
               // Reject Button
-              Container(
+              SizedBox(
                 width: 100,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(

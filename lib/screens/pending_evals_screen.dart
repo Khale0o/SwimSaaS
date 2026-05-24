@@ -838,7 +838,7 @@ class _PendingEvalsScreenState extends State<PendingEvalsScreen> {
                               score: scoreController.text,
                               notes: notesController.text,
                             );
-                            if (mounted) {
+                            if (context.mounted) {
                               Navigator.pop(context);
                             }
                           },
