@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/core/utils/firestore_parsers.dart';
 import 'package:swim/features/attendance/domain/attendance_record.dart';
+import 'package:swim/features/auth/data/parent_linking_service.dart';
 import 'package:swim/features/auth/domain/user_profile.dart';
 import 'package:swim/features/evaluations/domain/evaluation.dart' as domain;
 import 'package:swim/features/subscriptions/domain/subscription_info.dart';
@@ -124,6 +125,31 @@ void main() {
       expect(evaluation.evaluatedAt?.toUtc(), DateTime.utc(2026, 5, 22));
       expect(evaluation.isPassed, isTrue);
     });
+
+    test('fromMap supports optional ownership fields', () {
+      final evaluation = domain.Evaluation.fromMap({
+        AppFields.name: 'Swimmer One',
+        AppFields.swimmerId: 'swimmer-1',
+        AppFields.swimmerName: 'Swimmer One',
+        AppFields.parentUid: 'parent-1',
+        AppFields.createdBy: 'coach-1',
+        AppFields.updatedBy: 'coach-2',
+      });
+
+      expect(evaluation.swimmerId, 'swimmer-1');
+      expect(evaluation.swimmerName, 'Swimmer One');
+      expect(evaluation.parentUid, 'parent-1');
+      expect(evaluation.createdBy, 'coach-1');
+      expect(evaluation.updatedBy, 'coach-2');
+    });
+
+    test('fromMap treats missing ownership fields as null', () {
+      final evaluation = domain.Evaluation.fromMap(const {});
+
+      expect(evaluation.swimmerId, isNull);
+      expect(evaluation.swimmerName, isNull);
+      expect(evaluation.parentUid, isNull);
+    });
   });
 
   group('Embedded helpers', () {
@@ -150,6 +176,17 @@ void main() {
       expect(record.present, isTrue);
       expect(record.time, '05:00 PM');
       expect(record.toMap()['coachNote'], 'Late');
+    });
+  });
+
+  group('ParentLinkingService', () {
+    test('normalizeParentEmail trims and lowercases safely', () {
+      expect(
+        ParentLinkingService.normalizeParentEmail(' Parent@Example.COM '),
+        'parent@example.com',
+      );
+      expect(ParentLinkingService.normalizeParentEmail('  '), isNull);
+      expect(ParentLinkingService.normalizeParentEmail(null), isNull);
     });
   });
 }

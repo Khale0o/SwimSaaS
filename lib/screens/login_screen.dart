@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/features/auth/data/auth_repository.dart';
+import 'package:swim/features/auth/data/parent_linking_service.dart';
 import 'package:swim/features/auth/data/user_repository.dart';
 import 'package:swim/features/auth/presentation/auth_route_resolver.dart';
 import 'package:swim/screens/create_account_screen.dart';
@@ -22,6 +23,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final AuthRepository _authRepository = AuthRepository();
+  final ParentLinkingService _parentLinkingService = ParentLinkingService();
   final UserRepository _userRepository = UserRepository();
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -92,8 +94,10 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
+        await _linkParentSwimmersIfNeeded(role: role, user: user);
         _navigateToDashboard(role);
       } else {
+        await _linkParentSwimmersIfNeeded(role: AppRoles.parent, user: user);
         _navigateToDashboard(AppRoles.parent);
       }
     } catch (e) {
@@ -121,6 +125,24 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     });
+  }
+
+  Future<void> _linkParentSwimmersIfNeeded({
+    required String role,
+    required User user,
+  }) async {
+    if (role != AppRoles.parent) return;
+    final email = user.email;
+    if (email == null || email.trim().isEmpty) return;
+
+    try {
+      await _parentLinkingService.linkCurrentParentToSwimmers(
+        parentUid: user.uid,
+        parentEmail: email,
+      );
+    } catch (error) {
+      debugPrint('Parent swimmer auto-link failed: $error');
+    }
   }
 
   Future<void> _login() async {
@@ -169,8 +191,13 @@ class _LoginScreenState extends State<LoginScreen> {
               return;
             }
 
+            await _linkParentSwimmersIfNeeded(role: role, user: user);
             _navigateToDashboard(role);
           } else {
+            await _linkParentSwimmersIfNeeded(
+              role: AppRoles.parent,
+              user: user,
+            );
             _navigateToDashboard(AppRoles.parent);
           }
         }

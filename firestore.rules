@@ -1,0 +1,146 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function currentUserExists() {
+      return signedIn() && exists(userPath(request.auth.uid));
+    }
+
+    function currentUser() {
+      return get(userPath(request.auth.uid)).data;
+    }
+
+    function activeCurrentUser() {
+      return currentUserExists() && currentUser().isActive == true;
+    }
+
+    function isAdmin() {
+      return activeCurrentUser() && currentUser().isAdmin == true;
+    }
+
+    function isApprovedCoach() {
+      return activeCurrentUser()
+        && currentUser().role == 'coach'
+        && currentUser().isApproved == true;
+    }
+
+    function isParent() {
+      return activeCurrentUser() && currentUser().role == 'parent';
+    }
+
+    function isStaff() {
+      return isAdmin() || isApprovedCoach();
+    }
+
+    function appUserCreateKeys() {
+      return [
+        'uid',
+        'fullName',
+        'email',
+        'phone',
+        'role',
+        'isActive',
+        'isApproved',
+        'needsApproval',
+        'createdAt',
+        'profileCompleted'
+      ];
+    }
+
+    function validSelfProfileCreate(uid) {
+      return signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(appUserCreateKeys())
+        && request.resource.data.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.profileCompleted == false
+        && (
+          (
+            request.resource.data.role == 'parent'
+            && request.resource.data.isActive == true
+            && request.resource.data.isApproved == true
+            && request.resource.data.needsApproval == false
+          )
+          ||
+          (
+            request.resource.data.role == 'coach'
+            && request.resource.data.isActive == false
+            && request.resource.data.isApproved == false
+            && request.resource.data.needsApproval == true
+          )
+        );
+    }
+
+    function selfProfileUpdateKeysOnly() {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly(['fullName', 'phone', 'updatedAt', 'profileCompleted']);
+    }
+
+    function parentOwnsSwimmer() {
+      return isParent()
+        && (
+          resource.data.parentUid == request.auth.uid
+          || (
+            request.auth.token.email != null
+            && resource.data.email == request.auth.token.email
+          )
+        );
+    }
+
+    function parentCanClaimSwimmer() {
+      return isParent()
+        && request.auth.token.email != null
+        && resource.data.email == request.auth.token.email
+        && request.resource.data.parentUid == request.auth.uid
+        && request.resource.data
+          .diff(resource.data)
+          .affectedKeys()
+          .hasOnly(['parentUid', 'updatedAt'])
+        && (
+          !resource.data.keys().hasAny(['parentUid'])
+          || resource.data.parentUid == null
+          || resource.data.parentUid == ''
+          || resource.data.parentUid == request.auth.uid
+        );
+    }
+
+    function parentOwnsEvaluation() {
+      return isParent()
+        && resource.data.parentUid == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isStaff();
+      allow create: if validSelfProfileCreate(uid) || isAdmin();
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid && selfProfileUpdateKeysOnly());
+      allow delete: if isAdmin();
+    }
+
+    match /swimmers/{swimmerId} {
+      allow get, list: if isStaff() || parentOwnsSwimmer();
+      allow create, delete: if isStaff();
+      allow update: if isStaff() || parentCanClaimSwimmer();
+    }
+
+    match /Evaluations/{evaluationId} {
+      allow get, list: if isStaff() || parentOwnsEvaluation();
+      allow create, update, delete: if isStaff();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

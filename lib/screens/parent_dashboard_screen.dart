@@ -1,10 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/core/responsive/responsive_layout.dart';
 import 'package:swim/screens/login_screen.dart';
+
+Future<QuerySnapshot<Map<String, dynamic>>> _fetchParentSwimmers({
+  required FirebaseFirestore firestore,
+  required User user,
+  int limit = 1,
+}) async {
+  try {
+    final linkedQuery = await firestore
+        .collection(AppCollections.swimmers)
+        .where(AppFields.parentUid, isEqualTo: user.uid)
+        .limit(limit)
+        .get();
+    if (linkedQuery.docs.isNotEmpty) return linkedQuery;
+  } catch (error) {
+    debugPrint('Parent linked swimmer lookup failed: $error');
+  }
+
+  return firestore
+      .collection(AppCollections.swimmers)
+      .where(AppFields.email, isEqualTo: user.email)
+      .limit(limit)
+      .get();
+}
 
 class ParentDashboardScreen extends StatefulWidget {
   const ParentDashboardScreen({super.key});
@@ -722,11 +746,10 @@ class _ModernAttendancePageState extends State<ModernAttendancePage> {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        final swimmerQuery = await _firestore
-            .collection(AppCollections.swimmers)
-            .where(AppFields.email, isEqualTo: user.email)
-            .limit(1)
-            .get();
+        final swimmerQuery = await _fetchParentSwimmers(
+          firestore: _firestore,
+          user: user,
+        );
 
         if (swimmerQuery.docs.isNotEmpty) {
           final swimmerDoc = swimmerQuery.docs.first;
@@ -978,7 +1001,6 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   List<Map<String, dynamic>> _evaluations = [];
-  Map<String, dynamic>? _swimmerData;
   bool _isLoading = true;
 
   @override
@@ -991,38 +1013,90 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        final swimmerQuery = await _firestore
-            .collection(AppCollections.swimmers)
-            .where(AppFields.email, isEqualTo: user.email)
-            .limit(1)
-            .get();
+        if (kDebugMode) {
+          debugPrint(
+            'Parent evaluations load uid=${user.uid} email=${user.email}',
+          );
+        }
 
+        final swimmerQuery = await _fetchParentSwimmers(
+          firestore: _firestore,
+          user: user,
+        );
+        if (kDebugMode) {
+          debugPrint(
+            'Parent evaluations linked swimmers count=${swimmerQuery.docs.length} '
+            'ids=${swimmerQuery.docs.map((doc) => doc.id).join(',')}',
+          );
+        }
+
+        Map<String, dynamic>? swimmerData;
+        String? swimmerName;
         if (swimmerQuery.docs.isNotEmpty) {
-          _swimmerData = swimmerQuery.docs.first.data();
-          final swimmerName = _swimmerData!['name'];
+          final swimmerDoc = swimmerQuery.docs.first;
+          swimmerData = swimmerDoc.data();
+          swimmerName = swimmerData[AppFields.name]?.toString();
+        }
 
-          final querySnapshot = await _firestore
+        var querySnapshot = await _firestore
+            .collection(AppCollections.evaluations)
+            .where(AppFields.parentUid, isEqualTo: user.uid)
+            .get();
+        var queryUsed = 'parentUid';
+
+        if (querySnapshot.docs.isEmpty &&
+            swimmerData != null &&
+            swimmerData[AppFields.parentUid]?.toString().isEmpty != false &&
+            swimmerName != null &&
+            swimmerName.isNotEmpty) {
+          querySnapshot = await _firestore
               .collection(AppCollections.evaluations)
               .where(AppFields.name, isEqualTo: swimmerName)
-              .orderBy('date', descending: true)
               .get();
+          queryUsed = 'legacyName';
+        }
 
-          List<Map<String, dynamic>> evaluations = [];
-          for (var doc in querySnapshot.docs) {
-            evaluations.add(doc.data());
-          }
-
-          if (mounted) {
-            setState(() {
-              _evaluations = evaluations;
-              _isLoading = false;
-            });
-          }
-        } else {
-          if (mounted) {
-            setState(() => _isLoading = false);
+        if (kDebugMode) {
+          debugPrint(
+            'Parent evaluations query=$queryUsed count=${querySnapshot.docs.length}',
+          );
+          if (querySnapshot.docs.isNotEmpty) {
+            final first = querySnapshot.docs.first;
+            final data = first.data();
+            debugPrint(
+              'Parent evaluations first id=${first.id} '
+              'parentUid=${data[AppFields.parentUid]} '
+              'swimmerId=${data[AppFields.swimmerId]} '
+              'name=${data[AppFields.name]}',
+            );
           }
         }
+
+        final evaluations = <Map<String, dynamic>>[];
+        for (var doc in querySnapshot.docs) {
+          final data = doc.data();
+          final evaluationParentUid = data[AppFields.parentUid]?.toString();
+          if (evaluationParentUid == user.uid ||
+              evaluationParentUid == null ||
+              evaluationParentUid.isEmpty) {
+            evaluations.add(data);
+          }
+        }
+        _sortEvaluationsByDate(evaluations);
+
+        if (mounted) {
+          setState(() {
+            _evaluations = evaluations;
+            _isLoading = false;
+          });
+        }
+      }
+    } on FirebaseException catch (e) {
+      debugPrint(
+        'Error fetching evaluations: ${e.code} ${e.message ?? e.toString()}',
+      );
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     } catch (e) {
       debugPrint('Error fetching evaluations: $e');
@@ -1030,6 +1104,25 @@ class _ModernEvaluationsPageState extends State<ModernEvaluationsPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _sortEvaluationsByDate(List<Map<String, dynamic>> evaluations) {
+    evaluations.sort((a, b) {
+      final aDate = _readEvaluationDate(a);
+      final bDate = _readEvaluationDate(b);
+      if (aDate == null && bDate == null) return 0;
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return bDate.compareTo(aDate);
+    });
+  }
+
+  DateTime? _readEvaluationDate(Map<String, dynamic> data) {
+    final value = data[AppFields.date] ?? data[AppFields.evaluatedAt];
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 
   Color _getScoreColor(int score) {
@@ -1296,11 +1389,10 @@ class _ModernSubscriptionPageState extends State<ModernSubscriptionPage> {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        final querySnapshot = await _firestore
-            .collection(AppCollections.swimmers)
-            .where(AppFields.email, isEqualTo: user.email)
-            .limit(1)
-            .get();
+        final querySnapshot = await _fetchParentSwimmers(
+          firestore: _firestore,
+          user: user,
+        );
 
         if (querySnapshot.docs.isNotEmpty) {
           if (mounted) {
@@ -1719,24 +1811,23 @@ class ModernProfilePage extends StatefulWidget {
 }
 
 class _ModernProfilePageState extends State<ModernProfilePage> {
-  late final Future<QuerySnapshot> _profileFuture;
+  late final Future<QuerySnapshot<Map<String, dynamic>>>? _profileFuture;
 
   @override
   void initState() {
     super.initState();
-    _profileFuture = FirebaseFirestore.instance
-        .collection(AppCollections.swimmers)
-        .where(
-          AppFields.email,
-          isEqualTo: FirebaseAuth.instance.currentUser?.email,
-        )
-        .limit(1)
-        .get();
+    final user = FirebaseAuth.instance.currentUser;
+    _profileFuture = user == null
+        ? null
+        : _fetchParentSwimmers(
+            firestore: FirebaseFirestore.instance,
+            user: user,
+          );
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<QuerySnapshot>(
+    return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
       future: _profileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1758,7 +1849,7 @@ class _ModernProfilePageState extends State<ModernProfilePage> {
           );
         }
 
-        final data = snapshot.data!.docs.first.data() as Map<String, dynamic>;
+        final data = snapshot.data!.docs.first.data();
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),

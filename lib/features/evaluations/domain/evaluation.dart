@@ -12,6 +12,13 @@ class Evaluation {
     required this.trainingDays,
     required this.score,
     required this.notes,
+    this.swimmerId,
+    this.swimmerName,
+    this.parentUid,
+    this.createdBy,
+    this.updatedBy,
+    this.createdAt,
+    this.updatedAt,
     this.date,
     this.evaluatedAt,
     this.rawDate,
@@ -26,6 +33,13 @@ class Evaluation {
   final String trainingDays;
   final int score;
   final String notes;
+  final String? swimmerId;
+  final String? swimmerName;
+  final String? parentUid;
+  final String? createdBy;
+  final String? updatedBy;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   final DateTime? date;
   final DateTime? evaluatedAt;
   final Object? rawDate;
@@ -58,6 +72,13 @@ class Evaluation {
       trainingDays: FirestoreParsers.parseString(map[AppFields.trainingDays]),
       score: FirestoreParsers.parseInt(map[AppFields.score]),
       notes: FirestoreParsers.parseString(map[AppFields.notes]),
+      swimmerId: _parseNullableString(map[AppFields.swimmerId]),
+      swimmerName: _parseNullableString(map[AppFields.swimmerName]),
+      parentUid: _parseNullableString(map[AppFields.parentUid]),
+      createdBy: _parseNullableString(map[AppFields.createdBy]),
+      updatedBy: _parseNullableString(map[AppFields.updatedBy]),
+      createdAt: FirestoreParsers.parseDateTime(map[AppFields.createdAt]),
+      updatedAt: FirestoreParsers.parseDateTime(map[AppFields.updatedAt]),
       date: FirestoreParsers.parseDateTime(rawDate),
       evaluatedAt: FirestoreParsers.parseDateTime(rawEvaluatedAt),
       rawDate: rawDate,
@@ -74,6 +95,13 @@ class Evaluation {
       AppFields.trainingDays: trainingDays,
       AppFields.score: score,
       AppFields.notes: notes,
+      AppFields.swimmerId: swimmerId,
+      AppFields.swimmerName: swimmerName,
+      AppFields.parentUid: parentUid,
+      AppFields.createdBy: createdBy,
+      AppFields.updatedBy: updatedBy,
+      AppFields.createdAt: createdAt,
+      AppFields.updatedAt: updatedAt,
       AppFields.date: rawDate ?? date,
       AppFields.evaluatedAt: rawEvaluatedAt ?? evaluatedAt,
     };
@@ -88,6 +116,13 @@ class Evaluation {
     String? trainingDays,
     int? score,
     String? notes,
+    String? swimmerId,
+    String? swimmerName,
+    String? parentUid,
+    String? createdBy,
+    String? updatedBy,
+    DateTime? createdAt,
+    DateTime? updatedAt,
     DateTime? date,
     DateTime? evaluatedAt,
     Object? rawDate,
@@ -102,10 +137,23 @@ class Evaluation {
       trainingDays: trainingDays ?? this.trainingDays,
       score: score ?? this.score,
       notes: notes ?? this.notes,
+      swimmerId: swimmerId ?? this.swimmerId,
+      swimmerName: swimmerName ?? this.swimmerName,
+      parentUid: parentUid ?? this.parentUid,
+      createdBy: createdBy ?? this.createdBy,
+      updatedBy: updatedBy ?? this.updatedBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       date: date ?? this.date,
       evaluatedAt: evaluatedAt ?? this.evaluatedAt,
       rawDate: rawDate ?? this.rawDate,
       rawEvaluatedAt: rawEvaluatedAt ?? this.rawEvaluatedAt,
     );
+  }
+
+  static String? _parseNullableString(Object? value) {
+    if (value == null) return null;
+    final parsed = FirestoreParsers.parseString(value);
+    return parsed.isEmpty ? null : parsed;
   }
 }

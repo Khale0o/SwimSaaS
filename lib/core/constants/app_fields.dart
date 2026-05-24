@@ -28,6 +28,12 @@ class AppFields {
   static const lastRenewalDate = 'lastRenewalDate';
   static const attendance = 'attendance';
 
+  static const swimmerId = 'swimmerId';
+  static const swimmerName = 'swimmerName';
+  static const parentUid = 'parentUid';
+  static const createdBy = 'createdBy';
+  static const updatedBy = 'updatedBy';
+
   static const passed = 'passed';
   static const score = 'score';
   static const notes = 'notes';

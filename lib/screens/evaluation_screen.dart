@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/core/responsive/responsive_layout.dart';
@@ -13,6 +14,7 @@ class EvaluationScreen extends StatefulWidget {
 
 class _EvaluationListPageState extends State<EvaluationScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _searchController = TextEditingController();
   late final Stream<QuerySnapshot> _swimmersStream;
   late final Stream<QuerySnapshot> _evaluationsStream;
@@ -899,16 +901,111 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
     return 'Unknown date';
   }
 
+  Future<Map<String, dynamic>> _buildEvaluationOwnershipFields({
+    QueryDocumentSnapshot? swimmer,
+    String? swimmerName,
+  }) async {
+    QueryDocumentSnapshot? resolvedSwimmer = swimmer;
+
+    if (resolvedSwimmer == null && swimmerName != null) {
+      final query = await _firestore
+          .collection(AppCollections.swimmers)
+          .where(AppFields.name, isEqualTo: swimmerName)
+          .limit(1)
+          .get();
+      if (query.docs.isNotEmpty) {
+        resolvedSwimmer = query.docs.first;
+      }
+    }
+
+    if (resolvedSwimmer == null) return {};
+
+    final data = resolvedSwimmer.data() as Map<String, dynamic>;
+    final fields = <String, dynamic>{
+      AppFields.swimmerId: resolvedSwimmer.id,
+      AppFields.swimmerName: data[AppFields.name] ?? swimmerName,
+    };
+
+    final parentUid = await _resolveParentUid(data);
+    if (parentUid != null) {
+      fields[AppFields.parentUid] = parentUid;
+    }
+
+    return fields;
+  }
+
+  Future<String?> _resolveParentUid(Map<String, dynamic> swimmerData) async {
+    final existingParentUid =
+        _readNonEmptyString(swimmerData[AppFields.parentUid]);
+    if (existingParentUid != null) return existingParentUid;
+
+    final email = _readNonEmptyString(swimmerData[AppFields.email]);
+    if (email == null) return null;
+
+    final query = await _firestore
+        .collection(AppCollections.users)
+        .where(AppFields.email, isEqualTo: email)
+        .where(AppFields.role, isEqualTo: AppRoles.parent)
+        .limit(1)
+        .get();
+
+    if (query.docs.isEmpty) return null;
+    return query.docs.first.id;
+  }
+
+  Map<String, dynamic> _auditCreateFields() {
+    final uid = _auth.currentUser?.uid;
+    return {
+      if (uid != null) AppFields.createdBy: uid,
+      if (uid != null) AppFields.updatedBy: uid,
+      AppFields.createdAt: FieldValue.serverTimestamp(),
+      AppFields.updatedAt: FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, dynamic> _auditUpdateFields() {
+    final uid = _auth.currentUser?.uid;
+    return {
+      if (uid != null) AppFields.updatedBy: uid,
+      AppFields.updatedAt: FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, dynamic> _missingOwnershipFields(
+    Map<String, dynamic> existing,
+    Map<String, dynamic> resolved,
+  ) {
+    final fields = <String, dynamic>{};
+    for (final field in [
+      AppFields.swimmerId,
+      AppFields.swimmerName,
+      AppFields.parentUid,
+    ]) {
+      if (_readNonEmptyString(existing[field]) == null &&
+          _readNonEmptyString(resolved[field]) != null) {
+        fields[field] = resolved[field];
+      }
+    }
+    return fields;
+  }
+
+  String? _readNonEmptyString(Object? value) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty) return null;
+    return text;
+  }
+
   // ✏️ Edit Dialog
   void _showEditDialog(BuildContext context, QueryDocumentSnapshot doc) {
-    String? passedValue = doc['passed']?.toString();
-    String? subsValue = doc[AppFields.subscriptionStatus]?.toString();
-    final trainingController =
-        TextEditingController(text: doc['trainingDays']?.toString() ?? '');
+    final data = doc.data() as Map<String, dynamic>;
+    String? passedValue = data[AppFields.passed]?.toString();
+    String? subsValue = data[AppFields.subscriptionStatus]?.toString();
+    final trainingController = TextEditingController(
+        text: data[AppFields.trainingDays]?.toString() ?? '');
     final scoreController =
-        TextEditingController(text: doc['score']?.toString() ?? '0');
+        TextEditingController(text: data[AppFields.score]?.toString() ?? '0');
     final notesController =
-        TextEditingController(text: doc['notes']?.toString() ?? '');
+        TextEditingController(text: data[AppFields.notes]?.toString() ?? '');
 
     showDialog(
       context: context,
@@ -999,15 +1096,22 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
           ElevatedButton(
             onPressed: () async {
               try {
+                final resolvedOwnership = await _buildEvaluationOwnershipFields(
+                  swimmerName: _readNonEmptyString(
+                    data[AppFields.swimmerName] ?? data[AppFields.name],
+                  ),
+                );
                 await FirebaseFirestore.instance
                     .collection(AppCollections.evaluations)
                     .doc(doc.id)
                     .update({
-                  'passed': passedValue,
+                  AppFields.passed: passedValue,
                   AppFields.subscriptionStatus: subsValue,
-                  'trainingDays': trainingController.text,
-                  'score': int.tryParse(scoreController.text) ?? 0,
-                  'notes': notesController.text,
+                  AppFields.trainingDays: trainingController.text,
+                  AppFields.score: int.tryParse(scoreController.text) ?? 0,
+                  AppFields.notes: notesController.text,
+                  ..._missingOwnershipFields(data, resolvedOwnership),
+                  ..._auditUpdateFields(),
                 });
 
                 if (!context.mounted) return;
@@ -1044,8 +1148,9 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
   // ➕ دالة علشان تضيف تقييم لسباح محدد
   void _showAddEvaluationForSwimmer(
       BuildContext context, QueryDocumentSnapshot swimmer) {
-    final name = swimmer['name'] ?? '';
-    final level = swimmer['level'] ?? '';
+    final swimmerData = swimmer.data() as Map<String, dynamic>;
+    final name = swimmerData[AppFields.name] ?? '';
+    final level = swimmerData[AppFields.level] ?? '';
 
     String? passedValue;
     String? subsValue;
@@ -1159,17 +1264,21 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
               }
 
               try {
+                final ownershipFields =
+                    await _buildEvaluationOwnershipFields(swimmer: swimmer);
                 await FirebaseFirestore.instance
                     .collection(AppCollections.evaluations)
                     .add({
-                  'name': name,
-                  'level': level,
-                  'passed': passedValue,
+                  AppFields.name: name,
+                  AppFields.level: level,
+                  AppFields.passed: passedValue,
                   AppFields.subscriptionStatus: subsValue,
-                  'trainingDays': trainingController.text,
-                  'score': int.tryParse(scoreController.text) ?? 0,
-                  'notes': notesController.text,
-                  'date': FieldValue.serverTimestamp(),
+                  AppFields.trainingDays: trainingController.text,
+                  AppFields.score: int.tryParse(scoreController.text) ?? 0,
+                  AppFields.notes: notesController.text,
+                  AppFields.date: FieldValue.serverTimestamp(),
+                  ...ownershipFields,
+                  ..._auditCreateFields(),
                 });
 
                 if (!context.mounted) return;
@@ -1332,17 +1441,22 @@ class _EvaluationListPageState extends State<EvaluationScreen> {
               }
 
               try {
+                final ownershipFields = await _buildEvaluationOwnershipFields(
+                  swimmerName: nameController.text.trim(),
+                );
                 await FirebaseFirestore.instance
                     .collection(AppCollections.evaluations)
                     .add({
-                  'name': nameController.text,
-                  'level': levelController.text,
-                  'passed': passedValue,
+                  AppFields.name: nameController.text,
+                  AppFields.level: levelController.text,
+                  AppFields.passed: passedValue,
                   AppFields.subscriptionStatus: subsValue,
-                  'trainingDays': trainingController.text,
-                  'score': int.tryParse(scoreController.text) ?? 0,
-                  'notes': notesController.text,
-                  'date': FieldValue.serverTimestamp(),
+                  AppFields.trainingDays: trainingController.text,
+                  AppFields.score: int.tryParse(scoreController.text) ?? 0,
+                  AppFields.notes: notesController.text,
+                  AppFields.date: FieldValue.serverTimestamp(),
+                  ...ownershipFields,
+                  ..._auditCreateFields(),
                 });
 
                 if (!context.mounted) return;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:swim/core/constants/app_constants.dart';
 import 'package:swim/features/auth/data/auth_repository.dart';
+import 'package:swim/features/auth/data/parent_linking_service.dart';
 import 'package:swim/features/auth/data/user_repository.dart';
 import 'package:swim/features/auth/presentation/auth_route_resolver.dart';
 import 'package:swim/screens/login_screen.dart';
@@ -23,6 +24,7 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   late final AuthRepository _authRepository =
       widget._authRepository ?? AuthRepository();
+  final ParentLinkingService _parentLinkingService = ParentLinkingService();
   late final UserRepository _userRepository =
       widget._userRepository ?? UserRepository();
 
@@ -52,6 +54,11 @@ class _AuthGateState extends State<AuthGate> {
       if (!mounted) return;
 
       if (userProfile == null) {
+        await _linkParentSwimmersIfNeeded(
+          role: AppRoles.parent,
+          parentUid: user.uid,
+          parentEmail: user.email,
+        );
         _finishWith(dashboardForRole(AppRoles.parent));
         return;
       }
@@ -72,6 +79,11 @@ class _AuthGateState extends State<AuthGate> {
         return;
       }
 
+      await _linkParentSwimmersIfNeeded(
+        role: userProfile.role,
+        parentUid: user.uid,
+        parentEmail: user.email,
+      );
       _finishWith(dashboardForRole(userProfile.role));
     } catch (error) {
       if (!mounted) return;
@@ -94,6 +106,24 @@ class _AuthGateState extends State<AuthGate> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) afterBuild();
       });
+    }
+  }
+
+  Future<void> _linkParentSwimmersIfNeeded({
+    required String role,
+    required String parentUid,
+    required String? parentEmail,
+  }) async {
+    if (role != AppRoles.parent) return;
+    if (parentEmail == null || parentEmail.trim().isEmpty) return;
+
+    try {
+      await _parentLinkingService.linkCurrentParentToSwimmers(
+        parentUid: parentUid,
+        parentEmail: parentEmail,
+      );
+    } catch (error) {
+      debugPrint('Parent swimmer auto-link failed: $error');
     }
   }
 

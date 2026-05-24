@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:swim/core/constants/app_constants.dart';
+import 'package:swim/features/auth/data/parent_linking_service.dart';
 import 'login_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
@@ -86,6 +87,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           AppFields.createdAt: Timestamp.now(),
           AppFields.profileCompleted: false,
         });
+
+        if (_selectedRole == AppRoles.parent) {
+          try {
+            await ParentLinkingService().linkCurrentParentToSwimmers(
+              parentUid: credential.user!.uid,
+              parentEmail: _emailController.text,
+            );
+          } catch (error) {
+            debugPrint('Parent swimmer auto-link failed: $error');
+          }
+        }
 
         // 4️⃣ رسالة نجاح مختلفة حسب نوع الحساب
         if (mounted) {

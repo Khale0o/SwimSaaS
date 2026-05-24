@@ -18,6 +18,7 @@ class Swimmer {
     required this.trainingTime,
     required this.subscription,
     required this.attendance,
+    this.parentUid,
     this.joinDate,
     this.createdAt,
     this.updatedAt,
@@ -36,6 +37,7 @@ class Swimmer {
   final String trainingTime;
   final SubscriptionInfo subscription;
   final AttendanceSnapshot attendance;
+  final String? parentUid;
   final DateTime? joinDate;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -67,6 +69,7 @@ class Swimmer {
       trainingTime: FirestoreParsers.parseString(map[AppFields.trainingTime]),
       subscription: SubscriptionInfo.fromMap(map),
       attendance: AttendanceSnapshot.fromMap(map[AppFields.attendance]),
+      parentUid: _parseNullableString(map[AppFields.parentUid]),
       joinDate: FirestoreParsers.parseDateTime(rawJoinDate),
       createdAt: FirestoreParsers.parseDateTime(map[AppFields.createdAt]),
       updatedAt: FirestoreParsers.parseDateTime(map[AppFields.updatedAt]),
@@ -85,6 +88,7 @@ class Swimmer {
       AppFields.joinDate: rawJoinDate ?? joinDateText,
       AppFields.trainingDays: trainingDays,
       AppFields.trainingTime: trainingTime,
+      AppFields.parentUid: parentUid,
       ...subscription.toMap(),
       AppFields.attendance: attendance.toMap(),
       AppFields.createdAt: createdAt,
@@ -105,6 +109,7 @@ class Swimmer {
     String? trainingTime,
     SubscriptionInfo? subscription,
     AttendanceSnapshot? attendance,
+    String? parentUid,
     DateTime? joinDate,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -123,10 +128,17 @@ class Swimmer {
       trainingTime: trainingTime ?? this.trainingTime,
       subscription: subscription ?? this.subscription,
       attendance: attendance ?? this.attendance,
+      parentUid: parentUid ?? this.parentUid,
       joinDate: joinDate ?? this.joinDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rawJoinDate: rawJoinDate ?? this.rawJoinDate,
     );
+  }
+
+  static String? _parseNullableString(Object? value) {
+    if (value == null) return null;
+    final parsed = FirestoreParsers.parseString(value);
+    return parsed.isEmpty ? null : parsed;
   }
 }
